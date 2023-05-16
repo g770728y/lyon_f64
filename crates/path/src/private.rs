@@ -55,14 +55,14 @@ impl DebugValidator {
 }
 
 pub fn flatten_quadratic_bezier(
-    tolerance: f32,
+    tolerance: f64,
     from: Point,
     ctrl: Point,
     to: Point,
     attributes: Attributes,
     prev_attributes: Attributes,
     builder: &mut impl PathBuilder,
-    buffer: &mut [f32],
+    buffer: &mut [f64],
 ) -> EndpointId {
     let curve = QuadraticBezierSegment { from, ctrl, to };
     let n = attributes.len();
@@ -85,7 +85,7 @@ pub fn flatten_quadratic_bezier(
 }
 
 pub fn flatten_cubic_bezier(
-    tolerance: f32,
+    tolerance: f64,
     from: Point,
     ctrl1: Point,
     ctrl2: Point,
@@ -93,7 +93,7 @@ pub fn flatten_cubic_bezier(
     attributes: Attributes,
     prev_attributes: Attributes,
     builder: &mut impl PathBuilder,
-    buffer: &mut [f32],
+    buffer: &mut [f64],
 ) -> EndpointId {
     let curve = CubicBezierSegment {
         from,

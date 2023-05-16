@@ -40,7 +40,7 @@ pub(crate) enum Verb {
 ///
 /// # Custom attributes
 ///
-/// Paths can store a fixed number of extra `f32` values per endpoint, called
+/// Paths can store a fixed number of extra `f64` values per endpoint, called
 /// "custom attributes" or "interpolated attributes" through the documentation.
 /// These can be handy to represent arbitrary attributes such as variable colors,
 /// line width, etc.
@@ -159,7 +159,7 @@ impl Path {
 
     /// Applies a transform to all endpoints and control points of this path and
     /// Returns the result.
-    pub fn transformed<T: Transformation<f32>>(mut self, transform: &T) -> Self {
+    pub fn transformed<T: Transformation<f64>>(mut self, transform: &T) -> Self {
         self.apply_transform(transform);
 
         self
@@ -182,7 +182,7 @@ impl Path {
         self.as_slice().last_endpoint()
     }
 
-    fn apply_transform<T: Transformation<f32>>(&mut self, transform: &T) {
+    fn apply_transform<T: Transformation<f64>>(&mut self, transform: &T) {
         let iter = IdIter::new(self.num_attributes, &self.verbs[..]);
 
         for evt in iter {
@@ -619,13 +619,13 @@ impl Default for BuilderImpl {
 
 /// A builder for `Path` with custom attributes.
 ///
-/// Custom attributes are a fixed number of `f32` values associated with each endpoint.
+/// Custom attributes are a fixed number of `f64` values associated with each endpoint.
 /// All endpoints must have the same number of custom attributes,
 #[derive(Clone)]
 pub struct BuilderWithAttributes {
     pub(crate) builder: BuilderImpl,
     pub(crate) num_attributes: usize,
-    pub(crate) first_attributes: Vec<f32>,
+    pub(crate) first_attributes: Vec<f64>,
 }
 
 impl BuilderWithAttributes {
@@ -943,7 +943,7 @@ impl<'l> PointIter<'l> {
         // are always followed by advance_n which will
         // catch the issue and panic.
         if self.ptr >= self.end {
-            return point(f32::NAN, f32::NAN);
+            return point(f64::NAN, f64::NAN);
         }
 
         unsafe {
@@ -1002,7 +1002,7 @@ impl<'l> IterWithAttributes<'l> {
     /// At the time of writing, it is impossible to implement this efficiently
     /// with the `Iterator` trait, because of the need to express some lifetime
     /// constraints in an associated type, see #701.
-    pub fn for_each_flattened<F>(self, tolerance: f32, callback: &mut F)
+    pub fn for_each_flattened<F>(self, tolerance: f64, callback: &mut F)
     where
         F: FnMut(&Event<(Point, Attributes), Point>),
     {
@@ -1099,7 +1099,7 @@ impl<'l> IterWithAttributes<'l> {
     #[inline]
     fn pop_endpoint(&mut self) -> (Point, Attributes<'l>) {
         let position = self.points.next();
-        let attributes_ptr = self.points.ptr as *const f32;
+        let attributes_ptr = self.points.ptr as *const f64;
         self.points.advance_n(self.attrib_stride);
         let attributes = unsafe {
             // SAFETY: advance_n would have panicked if the slice is out of bounds
@@ -1277,7 +1277,7 @@ fn interpolated_attributes(
     assert!(idx + (num_attributes + 1) / 2 <= points.len());
 
     unsafe {
-        let ptr = &points[idx].x as *const f32;
+        let ptr = &points[idx].x as *const f64;
         core::slice::from_raw_parts(ptr, num_attributes)
     }
 }
@@ -1453,7 +1453,7 @@ fn n_stored_points(verb: Verb, attrib_stride: usize) -> usize {
 }
 
 #[cfg(test)]
-fn slice(a: &[f32]) -> &[f32] {
+fn slice(a: &[f64]) -> &[f64] {
     a
 }
 

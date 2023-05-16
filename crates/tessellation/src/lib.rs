@@ -317,7 +317,7 @@ pub enum VertexSource {
     Edge {
         from: EndpointId,
         to: EndpointId,
-        t: f32,
+        t: f64,
     },
 }
 
@@ -362,7 +362,7 @@ pub struct StrokeOptions {
     /// Line width
     ///
     /// Default value: `StrokeOptions::DEFAULT_LINE_WIDTH`.
-    pub line_width: f32,
+    pub line_width: f64,
 
     /// Index of a custom attribute defining a per-vertex
     /// factor to modulate the line width.
@@ -374,28 +374,28 @@ pub struct StrokeOptions {
     ///
     /// Must be greater than or equal to 1.0.
     /// Default value: `StrokeOptions::DEFAULT_MITER_LIMIT`.
-    pub miter_limit: f32,
+    pub miter_limit: f64,
 
     /// Maximum allowed distance to the path when building an approximation.
     ///
     /// See [Flattening and tolerance](index.html#flattening-and-tolerance).
     /// Default value: `StrokeOptions::DEFAULT_TOLERANCE`.
-    pub tolerance: f32,
+    pub tolerance: f64,
 }
 
 impl StrokeOptions {
     /// Minimum miter limit as defined by the SVG specification.
     ///
     /// See [StrokeMiterLimitProperty](https://svgwg.org/specs/strokes/#StrokeMiterlimitProperty)
-    pub const MINIMUM_MITER_LIMIT: f32 = 1.0;
+    pub const MINIMUM_MITER_LIMIT: f64 = 1.0;
     /// Default miter limit as defined by the SVG specification.
     ///
     /// See [StrokeMiterLimitProperty](https://svgwg.org/specs/strokes/#StrokeMiterlimitProperty)
-    pub const DEFAULT_MITER_LIMIT: f32 = 4.0;
+    pub const DEFAULT_MITER_LIMIT: f64 = 4.0;
     pub const DEFAULT_LINE_CAP: LineCap = LineCap::Butt;
     pub const DEFAULT_LINE_JOIN: LineJoin = LineJoin::Miter;
-    pub const DEFAULT_LINE_WIDTH: f32 = 1.0;
-    pub const DEFAULT_TOLERANCE: f32 = 0.1;
+    pub const DEFAULT_LINE_WIDTH: f64 = 1.0;
+    pub const DEFAULT_TOLERANCE: f64 = 0.1;
 
     pub const DEFAULT: Self = StrokeOptions {
         start_cap: Self::DEFAULT_LINE_CAP,
@@ -408,12 +408,12 @@ impl StrokeOptions {
     };
 
     #[inline]
-    pub fn tolerance(tolerance: f32) -> Self {
+    pub fn tolerance(tolerance: f64) -> Self {
         Self::DEFAULT.with_tolerance(tolerance)
     }
 
     #[inline]
-    pub const fn with_tolerance(mut self, tolerance: f32) -> Self {
+    pub const fn with_tolerance(mut self, tolerance: f64) -> Self {
         self.tolerance = tolerance;
         self
     }
@@ -444,13 +444,13 @@ impl StrokeOptions {
     }
 
     #[inline]
-    pub const fn with_line_width(mut self, width: f32) -> Self {
+    pub const fn with_line_width(mut self, width: f64) -> Self {
         self.line_width = width;
         self
     }
 
     #[inline]
-    pub fn with_miter_limit(mut self, limit: f32) -> Self {
+    pub fn with_miter_limit(mut self, limit: f64) -> Self {
         assert!(limit >= Self::MINIMUM_MITER_LIMIT);
         self.miter_limit = limit;
         self
@@ -479,7 +479,7 @@ pub struct FillOptions {
     /// See [Flattening and tolerance](index.html#flattening-and-tolerance).
     ///
     /// Default value: `FillOptions::DEFAULT_TOLERANCE`.
-    pub tolerance: f32,
+    pub tolerance: f64,
 
     /// Set the fill rule.
     ///
@@ -506,7 +506,7 @@ pub struct FillOptions {
 
 impl FillOptions {
     /// Default flattening tolerance.
-    pub const DEFAULT_TOLERANCE: f32 = 0.1;
+    pub const DEFAULT_TOLERANCE: f64 = 0.1;
     /// Default Fill rule.
     pub const DEFAULT_FILL_RULE: FillRule = FillRule::EvenOdd;
     /// Default orientation.
@@ -525,7 +525,7 @@ impl FillOptions {
     }
 
     #[inline]
-    pub fn tolerance(tolerance: f32) -> Self {
+    pub fn tolerance(tolerance: f64) -> Self {
         Self::DEFAULT.with_tolerance(tolerance)
     }
 
@@ -537,7 +537,7 @@ impl FillOptions {
     }
 
     #[inline]
-    pub const fn with_tolerance(mut self, tolerance: f32) -> Self {
+    pub const fn with_tolerance(mut self, tolerance: f64) -> Self {
         self.tolerance = tolerance;
         self
     }
@@ -646,7 +646,7 @@ impl From<VertexId> for usize {
 }
 
 pub(crate) struct SimpleAttributeStore {
-    data: Vec<f32>,
+    data: Vec<f64>,
     num_attributes: usize,
     next_id: EndpointId,
 }

@@ -51,7 +51,7 @@ pub struct HatchingOptions {
     /// See [Flattening and tolerance](index.html#flattening-and-tolerance).
     ///
     /// Default value: `HatchingOptions::DEFAULT_TOLERANCE`.
-    pub tolerance: f32,
+    pub tolerance: f64,
     /// Angle between the hatching pattern and the x axis.
     ///
     /// Default value: `HatchingOptions::ANGLE`.
@@ -73,7 +73,7 @@ impl Default for HatchingOptions {
 
 impl HatchingOptions {
     /// Default flattening tolerance.
-    pub const DEFAULT_TOLERANCE: f32 = 0.1;
+    pub const DEFAULT_TOLERANCE: f64 = 0.1;
     /// Default hatching angle.
     pub const DEFAULT_ANGLE: Angle = Angle { radians: 0.0 };
     pub const DEFAULT_UV_ORIGIN: Point = Point {
@@ -90,7 +90,7 @@ impl HatchingOptions {
     };
 
     #[inline]
-    pub fn tolerance(tolerance: f32) -> Self {
+    pub fn tolerance(tolerance: f64) -> Self {
         Self::DEFAULT.with_tolerance(tolerance)
     }
 
@@ -100,7 +100,7 @@ impl HatchingOptions {
     }
 
     #[inline]
-    pub fn with_tolerance(mut self, tolerance: f32) -> Self {
+    pub fn with_tolerance(mut self, tolerance: f64) -> Self {
         self.tolerance = tolerance;
         self
     }
@@ -131,7 +131,7 @@ pub struct DotOptions {
     /// See [Flattening and tolerance](index.html#flattening-and-tolerance).
     ///
     /// Default value: `HatchingOptions::DEFAULT_TOLERANCE`.
-    pub tolerance: f32,
+    pub tolerance: f64,
     /// Angle between the hatching pattern and the x axis.
     ///
     /// Default value: `HatchingOptions::ANGLE`.
@@ -148,7 +148,7 @@ impl Default for DotOptions {
 
 impl DotOptions {
     /// Default flattening tolerance.
-    pub const DEFAULT_TOLERANCE: f32 = 0.1;
+    pub const DEFAULT_TOLERANCE: f64 = 0.1;
     /// Default inclination of the dot pattern.
     pub const DEFAULT_ANGLE: Angle = Angle { radians: 0.0 };
     pub const DEFAULT_UV_ORIGIN: Point = Point {
@@ -164,7 +164,7 @@ impl DotOptions {
     };
 
     #[inline]
-    pub fn tolerance(tolerance: f32) -> Self {
+    pub fn tolerance(tolerance: f64) -> Self {
         Self::DEFAULT.with_tolerance(tolerance)
     }
 
@@ -174,7 +174,7 @@ impl DotOptions {
     }
 
     #[inline]
-    pub fn with_tolerance(mut self, tolerance: f32) -> Self {
+    pub fn with_tolerance(mut self, tolerance: f64) -> Self {
         self.tolerance = tolerance;
         self
     }
@@ -186,7 +186,7 @@ impl DotOptions {
     }
 }
 
-type Edge = LineSegment<f32>;
+type Edge = LineSegment<f64>;
 
 pub struct HatchSegment {
     /// Left endpoint.
@@ -198,7 +198,7 @@ pub struct HatchSegment {
     /// Rotated position along a direction perpendicular to the hatching pattern.
     ///
     /// This position is relative to `uv_origin` specified in the `HatchingOptions`.
-    pub v: f32,
+    pub v: f64,
 }
 
 pub struct HatchEndpoint {
@@ -209,7 +209,7 @@ pub struct HatchEndpoint {
     /// Rotated position along the direction of the hatching pattern.
     ///
     /// This position is relative to `uv_origin` specified in the `HatchingOptions`.
-    pub u: f32,
+    pub u: f64,
 }
 
 /// The output of `Hatcher::hatch_path`.
@@ -219,16 +219,16 @@ pub trait HatchBuilder {
     /// Called for each hatch segment.
     fn add_segment(&mut self, segment: &HatchSegment);
     /// Specifies the distance between each row of the pattern.
-    fn next_offset(&mut self, row_idx: u32) -> f32;
+    fn next_offset(&mut self, row_idx: u32) -> f64;
 }
 
 pub struct Dot {
     /// World-space position of the dot.
     pub position: Point,
     /// Rotated position along an axis parallel to the rows of the pattern.
-    pub u: f32,
+    pub u: f64,
     /// Rotated position along an axis parallel to the columns of the pattern.
-    pub v: f32,
+    pub v: f64,
     /// Index of the current column.
     pub column: u32,
     /// Index of the current row.
@@ -240,17 +240,17 @@ pub struct Dot {
 /// Implement this trait to create custom dot patterns.
 pub trait DotBuilder {
     /// Offset of the first dot after a left edge.
-    fn first_column_offset(&mut self, _row: u32) -> f32 {
+    fn first_column_offset(&mut self, _row: u32) -> f64 {
         0.0
     }
     /// Whether and how much to align the dots for a given row.
-    fn alignment(&mut self, _row: u32) -> Option<f32> {
+    fn alignment(&mut self, _row: u32) -> Option<f64> {
         None
     }
     /// Called for each row of dots.
-    fn next_row_offset(&mut self, column: u32, row: u32) -> f32;
+    fn next_row_offset(&mut self, column: u32, row: u32) -> f64;
     /// Distance between each dot in a given row.
-    fn next_column_offset(&mut self, column: u32, row: u32) -> f32;
+    fn next_column_offset(&mut self, column: u32, row: u32) -> f64;
 
     /// Called for each dot.
     fn add_dot(&mut self, dot: &Dot);
@@ -259,9 +259,9 @@ pub trait DotBuilder {
 /// A `DotBuilder` implementation for dot patterns with constant intervals.
 pub struct RegularDotPattern<Cb: FnMut(&Dot)> {
     /// Minimum distance between dots in a given column.
-    pub column_interval: f32,
+    pub column_interval: f64,
     /// Minimum distance between dots in a given row.
-    pub row_interval: f32,
+    pub row_interval: f64,
     /// A callback invoked for each dot.
     pub callback: Cb,
 }
@@ -293,12 +293,12 @@ impl Hatcher {
             segment: HatchSegment {
                 a: HatchEndpoint {
                     position: point(0.0, 0.0),
-                    tangent: vector(f32::NAN, f32::NAN),
+                    tangent: vector(f64::NAN, f64::NAN),
                     u: 0.0,
                 },
                 b: HatchEndpoint {
                     position: point(0.0, 0.0),
-                    tangent: vector(f32::NAN, f32::NAN),
+                    tangent: vector(f64::NAN, f64::NAN),
                     u: 0.0,
                 },
                 row: 0,
@@ -348,8 +348,8 @@ impl Hatcher {
         self.uv_origin = Rotation::new(options.angle).transform_point(options.uv_origin);
         self.active_edges.clear();
         self.segment.row = 0;
-        self.segment.a.tangent = vector(f32::NAN, f32::NAN);
-        self.segment.b.tangent = vector(f32::NAN, f32::NAN);
+        self.segment.a.tangent = vector(f64::NAN, f64::NAN);
+        self.segment.b.tangent = vector(f64::NAN, f64::NAN);
         self.compute_tangents = options.compute_tangents;
 
         let mut y = events.edges.first().unwrap().from.y + output.next_offset(0);
@@ -365,7 +365,7 @@ impl Hatcher {
                     return;
                 }
             }
-            y_max = f32::max(y_max, edge.to.y);
+            y_max = f64::max(y_max, edge.to.y);
             self.update_sweep_line(edge);
         }
 
@@ -401,14 +401,14 @@ impl Hatcher {
         self.active_edges.push(*edge);
     }
 
-    fn hatch_line(&mut self, y: f32, output: &mut dyn HatchBuilder) {
+    fn hatch_line(&mut self, y: f64, output: &mut dyn HatchBuilder) {
         self.active_edges
             .sort_by_key(|e| Ordered(e.solve_x_for_y(y)));
 
         let mut inside = false;
-        let mut prev_x = f32::NAN;
-        let mut prev_tangent = vector(f32::NAN, f32::NAN);
-        let mut tangent = vector(f32::NAN, f32::NAN);
+        let mut prev_x = f64::NAN;
+        let mut prev_tangent = vector(f64::NAN, f64::NAN);
+        let mut tangent = vector(f64::NAN, f64::NAN);
         self.segment.v = y - self.uv_origin.y;
 
         for active_edge in &self.active_edges {
@@ -464,12 +464,12 @@ struct EventsBuilder {
     angle: Angle,
     first: Point,
     current: Point,
-    tolerance: f32,
+    tolerance: f64,
     validator: DebugValidator,
 }
 
 impl EventsBuilder {
-    fn new(angle: Angle, tolerance: f32) -> Self {
+    fn new(angle: Angle, tolerance: f64) -> Self {
         EventsBuilder {
             edges: Vec::new(),
             angle,
@@ -578,7 +578,7 @@ impl PathBuilder for EventsBuilder {
 }
 
 impl HatchingEvents {
-    pub fn set_path<Iter>(&mut self, tolerance: f32, angle: Angle, it: Iter)
+    pub fn set_path<Iter>(&mut self, tolerance: f64, angle: Angle, it: Iter)
     where
         Iter: IntoIterator<Item = PathEvent>,
     {
@@ -594,7 +594,7 @@ impl HatchingEvents {
 }
 
 #[derive(PartialEq)]
-struct Ordered(f32);
+struct Ordered(f64);
 impl Eq for Ordered {}
 
 impl PartialOrd for Ordered {
@@ -635,13 +635,13 @@ fn compare_positions(a: Point, b: Point) -> Ordering {
 }
 
 impl<Cb: FnMut(&Dot)> DotBuilder for RegularDotPattern<Cb> {
-    fn alignment(&mut self, _row: u32) -> Option<f32> {
+    fn alignment(&mut self, _row: u32) -> Option<f64> {
         Some(self.column_interval)
     }
-    fn next_row_offset(&mut self, _column: u32, _row: u32) -> f32 {
+    fn next_row_offset(&mut self, _column: u32, _row: u32) -> f64 {
         self.row_interval
     }
-    fn next_column_offset(&mut self, _column: u32, _row: u32) -> f32 {
+    fn next_column_offset(&mut self, _column: u32, _row: u32) -> f64 {
         self.column_interval
     }
     fn add_dot(&mut self, dot: &Dot) {
@@ -652,7 +652,7 @@ impl<Cb: FnMut(&Dot)> DotBuilder for RegularDotPattern<Cb> {
 /// A `HatchBuilder` implementation for hatching patterns with constant intervals.
 pub struct RegularHatchingPattern<Cb: FnMut(&HatchSegment)> {
     /// The distance between each row of hatches.
-    pub interval: f32,
+    pub interval: f64,
     /// A callback invoked for each segment.
     pub callback: Cb,
 }
@@ -661,7 +661,7 @@ impl<Cb: FnMut(&HatchSegment)> HatchBuilder for RegularHatchingPattern<Cb> {
     fn add_segment(&mut self, segment: &HatchSegment) {
         (self.callback)(segment)
     }
-    fn next_offset(&mut self, _row: u32) -> f32 {
+    fn next_offset(&mut self, _row: u32) -> f64 {
         self.interval
     }
 }
@@ -707,7 +707,7 @@ impl<'l> HatchBuilder for HatchesToDots<'l> {
         }
     }
 
-    fn next_offset(&mut self, row: u32) -> f32 {
+    fn next_offset(&mut self, row: u32) -> f64 {
         let val = self.builder.next_row_offset(self.column, row);
         self.column = 0;
 
@@ -715,7 +715,7 @@ impl<'l> HatchBuilder for HatchesToDots<'l> {
     }
 }
 
-fn modulo(a: f32, m: f32) -> f32 {
+fn modulo(a: f64, m: f64) -> f64 {
     if a >= 0.0 {
         a % m
     } else {

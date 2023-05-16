@@ -13,14 +13,14 @@ where
     Iter: IntoIterator<Item = Evt>,
     Evt: FastBoundingBox,
 {
-    let mut min = point(f32::MAX, f32::MAX);
-    let mut max = point(f32::MIN, f32::MIN);
+    let mut min = point(f64::MAX, f64::MAX);
+    let mut max = point(f64::MIN, f64::MIN);
     for e in path {
         e.min_max(&mut min, &mut max);
     }
 
     // Return an empty rectangle by default if there was no event in the path.
-    if min == point(f32::MAX, f32::MAX) {
+    if min == point(f64::MAX, f64::MAX) {
         return Box2D::zero();
     }
 
@@ -64,15 +64,15 @@ where
     Iter: IntoIterator<Item = Evt>,
     Evt: TightBoundingBox,
 {
-    let mut min = point(f32::MAX, f32::MAX);
-    let mut max = point(f32::MIN, f32::MIN);
+    let mut min = point(f64::MAX, f64::MAX);
+    let mut max = point(f64::MIN, f64::MIN);
 
     for evt in path {
         evt.min_max(&mut min, &mut max);
     }
 
     // Return an empty rectangle by default if there was no event in the path.
-    if min == point(f32::MAX, f32::MAX) {
+    if min == point(f64::MAX, f64::MAX) {
         return Box2D::zero();
     }
 

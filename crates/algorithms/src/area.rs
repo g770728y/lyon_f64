@@ -4,7 +4,7 @@ use crate::geom::vector;
 use crate::path::{iterator::PathIterator, PathEvent};
 
 /// Compute the signed area of a path by summing the signed areas of its sub-paths.
-pub fn approximate_signed_area<Iter>(tolerance: f32, path: Iter) -> f32
+pub fn approximate_signed_area<Iter>(tolerance: f64, path: Iter) -> f64
 where
     Iter: IntoIterator<Item = PathEvent>,
 {
@@ -23,7 +23,7 @@ where
 /// to process the successive sub-paths of a path.
 ///
 /// Returns `None` if there is no more sub-path or if the the iterator is malformed.
-pub fn approximate_sub_path_signed_area<Iter>(tolerance: f32, path: &mut Iter) -> Option<f32>
+pub fn approximate_sub_path_signed_area<Iter>(tolerance: f64, path: &mut Iter) -> Option<f64>
 where
     Iter: Iterator<Item = PathEvent>,
 {
@@ -61,11 +61,11 @@ where
 }
 
 /// Iterator over the sub-path areas of a path.
-pub struct SignedAreas<Iter = PathEvent>(pub Iter, f32);
+pub struct SignedAreas<Iter = PathEvent>(pub Iter, f64);
 
 impl<Iter: Iterator<Item = PathEvent>> Iterator for SignedAreas<Iter> {
-    type Item = f32;
-    fn next(&mut self) -> Option<f32> {
+    type Item = f64;
+    fn next(&mut self) -> Option<f64> {
         approximate_sub_path_signed_area(self.1, &mut self.0)
     }
 }

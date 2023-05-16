@@ -88,12 +88,12 @@ use crate::{Attributes, Event, PathEvent};
 /// An extension trait for `PathEvent` iterators.
 pub trait PathIterator: Iterator<Item = PathEvent> + Sized {
     /// Returns an iterator that turns curves into line segments.
-    fn flattened(self, tolerance: f32) -> Flattened<Self> {
+    fn flattened(self, tolerance: f64) -> Flattened<Self> {
         Flattened::new(tolerance, self)
     }
 
     /// Returns an iterator applying a 2D transform to all of its events.
-    fn transformed<T: Transformation<f32>>(self, mat: &T) -> Transformed<Self, T> {
+    fn transformed<T: Transformation<f64>>(self, mat: &T) -> Transformed<Self, T> {
         Transformed::new(mat, self)
     }
 }
@@ -126,18 +126,18 @@ pub struct Flattened<Iter> {
     it: Iter,
     current_position: Point,
     current_curve: TmpFlatteningIter,
-    tolerance: f32,
+    tolerance: f64,
 }
 
 enum TmpFlatteningIter {
-    Quadratic(quadratic_bezier::Flattened<f32>),
-    Cubic(cubic_bezier::Flattened<f32>),
+    Quadratic(quadratic_bezier::Flattened<f64>),
+    Cubic(cubic_bezier::Flattened<f64>),
     None,
 }
 
 impl<Iter: Iterator<Item = PathEvent>> Flattened<Iter> {
     /// Create the iterator.
-    pub fn new(tolerance: f32, it: Iter) -> Self {
+    pub fn new(tolerance: f64, it: Iter) -> Self {
         Flattened {
             it,
             current_position: point(0.0, 0.0),
@@ -230,7 +230,7 @@ pub struct Transformed<'l, I, T> {
     transform: &'l T,
 }
 
-impl<'l, I, T: Transformation<f32>> Transformed<'l, I, T>
+impl<'l, I, T: Transformation<f64>> Transformed<'l, I, T>
 where
     I: Iterator<Item = PathEvent>,
 {
@@ -244,7 +244,7 @@ where
 impl<'l, I, T> Iterator for Transformed<'l, I, T>
 where
     I: Iterator<Item = PathEvent>,
-    T: Transformation<f32>,
+    T: Transformation<f64>,
 {
     type Item = PathEvent;
     fn next(&mut self) -> Option<PathEvent> {

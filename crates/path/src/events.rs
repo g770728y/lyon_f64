@@ -111,7 +111,7 @@ impl<Ep, Cp> Event<Ep, Cp> {
 }
 
 impl PathEvent {
-    pub fn transformed<T: Transformation<f32>>(&self, mat: &T) -> Self {
+    pub fn transformed<T: Transformation<f64>>(&self, mat: &T) -> Self {
         match self {
             Event::Line { from, to } => Event::Line {
                 from: mat.transform_point(*from),

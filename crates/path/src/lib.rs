@@ -87,53 +87,53 @@ pub mod traits {
 }
 
 pub mod math {
-    //! f32 version of the lyon_geom types used everywhere. Most other lyon crates
+    //! f64 version of the lyon_geom types used everywhere. Most other lyon crates
     //! reexport them.
 
     use crate::geom::euclid;
 
-    /// Alias for ```euclid::default::Point2D<f32>```.
-    pub type Point = euclid::default::Point2D<f32>;
+    /// Alias for ```euclid::default::Point2D<f64>```.
+    pub type Point = euclid::default::Point2D<f64>;
 
-    /// Alias for ```euclid::default::Point2D<f32>```.
-    pub type Vector = euclid::default::Vector2D<f32>;
+    /// Alias for ```euclid::default::Point2D<f64>```.
+    pub type Vector = euclid::default::Vector2D<f64>;
 
-    /// Alias for ```euclid::default::Size2D<f32>```.
-    pub type Size = euclid::default::Size2D<f32>;
+    /// Alias for ```euclid::default::Size2D<f64>```.
+    pub type Size = euclid::default::Size2D<f64>;
 
-    /// Alias for ```euclid::default::Box2D<f32>```
-    pub type Box2D = euclid::default::Box2D<f32>;
+    /// Alias for ```euclid::default::Box2D<f64>```
+    pub type Box2D = euclid::default::Box2D<f64>;
 
-    /// Alias for ```euclid::default::Transform2D<f32>```
-    pub type Transform = euclid::default::Transform2D<f32>;
+    /// Alias for ```euclid::default::Transform2D<f64>```
+    pub type Transform = euclid::default::Transform2D<f64>;
 
-    /// Alias for ```euclid::default::Rotation2D<f32>```
-    pub type Rotation = euclid::default::Rotation2D<f32>;
+    /// Alias for ```euclid::default::Rotation2D<f64>```
+    pub type Rotation = euclid::default::Rotation2D<f64>;
 
-    /// Alias for ```euclid::default::Translation2D<f32>```
-    pub type Translation = euclid::Translation2D<f32, euclid::UnknownUnit, euclid::UnknownUnit>;
+    /// Alias for ```euclid::default::Translation2D<f64>```
+    pub type Translation = euclid::Translation2D<f64, euclid::UnknownUnit, euclid::UnknownUnit>;
 
-    /// Alias for ```euclid::default::Scale<f32>```
-    pub type Scale = euclid::default::Scale<f32>;
+    /// Alias for ```euclid::default::Scale<f64>```
+    pub type Scale = euclid::default::Scale<f64>;
 
-    /// An angle in radians (f32).
-    pub type Angle = euclid::Angle<f32>;
+    /// An angle in radians (f64).
+    pub type Angle = euclid::Angle<f64>;
 
     /// Shorthand for `Vector::new(x, y)`.
     #[inline]
-    pub fn vector(x: f32, y: f32) -> Vector {
+    pub fn vector(x: f64, y: f64) -> Vector {
         Vector::new(x, y)
     }
 
     /// Shorthand for `Point::new(x, y)`.
     #[inline]
-    pub fn point(x: f32, y: f32) -> Point {
+    pub fn point(x: f64, y: f64) -> Point {
         Point::new(x, y)
     }
 
     /// Shorthand for `Size::new(x, y)`.
     #[inline]
-    pub fn size(w: f32, h: f32) -> Size {
+    pub fn size(w: f64, h: f64) -> Size {
         Size::new(w, h)
     }
 }
@@ -242,7 +242,7 @@ impl Side {
     }
 
     #[inline]
-    pub fn to_f32(self) -> f32 {
+    pub fn to_f32(self) -> f64 {
         match self {
             Side::Positive => 1.0,
             Side::Negative => -1.0,
@@ -350,7 +350,7 @@ pub trait Position {
     fn position(&self) -> Point;
 }
 
-impl<U> Position for crate::geom::euclid::Point2D<f32, U> {
+impl<U> Position for crate::geom::euclid::Point2D<f64, U> {
     fn position(&self) -> Point {
         self.to_untyped()
     }
@@ -362,13 +362,13 @@ impl<'l, T: Position> Position for &'l T {
     }
 }
 
-impl Position for (f32, f32) {
+impl Position for (f64, f64) {
     fn position(&self) -> Point {
         Point::new(self.0, self.1)
     }
 }
 
-impl Position for [f32; 2] {
+impl Position for [f64; 2] {
     fn position(&self) -> Point {
         Point::new(self[0], self[1])
     }
@@ -426,12 +426,12 @@ impl AttributeStore for () {
 
 /// A view over a contiguous storage of custom attributes.
 pub struct AttributeSlice<'l> {
-    data: &'l [f32],
+    data: &'l [f64],
     stride: usize,
 }
 
 impl<'l> AttributeSlice<'l> {
-    pub fn new(data: &'l [f32], num_attributes: usize) -> Self {
+    pub fn new(data: &'l [f64], num_attributes: usize) -> Self {
         AttributeSlice {
             data,
             stride: num_attributes,
@@ -453,7 +453,7 @@ impl<'l> AttributeStore for AttributeSlice<'l> {
 
 /// An alias for `usize`.
 pub type AttributeIndex = usize;
-/// An alias for a slice of `f32` values.
-pub type Attributes<'l> = &'l [f32];
+/// An alias for a slice of `f64` values.
+pub type Attributes<'l> = &'l [f64];
 /// An empty attribute slice.
 pub const NO_ATTRIBUTES: Attributes<'static> = &[];

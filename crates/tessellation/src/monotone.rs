@@ -193,7 +193,7 @@ struct SideEvents {
     // also keep track of a conservative reference x value which is not not
     // relaxed until the opposite side has is flushed. See issue #623.
     reference_point: Point,
-    conservative_reference_x: f32,
+    conservative_reference_x: f64,
     // A convex chain of vertex events for this side that can be tessellated
     // without interference from the other side.
     events: Vec<VertexId>,

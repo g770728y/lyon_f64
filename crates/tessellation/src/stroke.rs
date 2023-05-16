@@ -16,7 +16,7 @@ use crate::{
     LineCap, LineJoin, Side, SimpleAttributeStore, StrokeGeometryBuilder, StrokeOptions,
     TessellationError, TessellationResult, VertexId, VertexSource,
 };
-use std::f32::consts::PI;
+use std::f64::consts::PI;
 
 const SIDE_POSITIVE: usize = 0;
 const SIDE_NEGATIVE: usize = 1;
@@ -101,7 +101,7 @@ macro_rules! nan_check {
 /// ```
 #[derive(Default)]
 pub struct StrokeTessellator {
-    attrib_buffer: Vec<f32>,
+    attrib_buffer: Vec<f64>,
     builder_attrib_store: SimpleAttributeStore,
 }
 
@@ -275,7 +275,7 @@ impl StrokeTessellator {
     pub fn tessellate_circle(
         &mut self,
         center: Point,
-        radius: f32,
+        radius: f64,
         options: &StrokeOptions,
         output: &mut dyn StrokeGeometryBuilder,
     ) -> TessellationResult {
@@ -314,8 +314,8 @@ pub(crate) struct SidePoints {
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct EndpointData {
     pub position: Point,
-    pub half_width: f32,
-    pub advancement: f32,
+    pub half_width: f64,
+    pub advancement: f64,
     pub line_join: LineJoin,
     pub src: VertexSource,
     pub side_points: [SidePoints; 2],
@@ -327,16 +327,16 @@ impl Default for EndpointData {
     fn default() -> Self {
         EndpointData {
             position: Point::zero(),
-            half_width: f32::NAN,
-            advancement: f32::NAN,
+            half_width: f64::NAN,
+            advancement: f64::NAN,
             line_join: LineJoin::Miter,
             src: VertexSource::Endpoint {
                 id: EndpointId::INVALID,
             },
             side_points: [SidePoints {
-                prev: point(f32::NAN, f32::NAN),
+                prev: point(f64::NAN, f64::NAN),
                 prev_vertex: VertexId(u32::MAX),
-                next: point(f32::NAN, f32::NAN),
+                next: point(f64::NAN, f64::NAN),
                 next_vertex: VertexId(u32::MAX),
                 single_vertex: None,
             }; 2],
@@ -354,13 +354,13 @@ pub struct StrokeBuilder<'l> {
     builder: StrokeBuilderImpl<'l>,
     attrib_store: &'l mut SimpleAttributeStore,
     validator: DebugValidator,
-    prev: (Point, EndpointId, f32),
+    prev: (Point, EndpointId, f64),
 }
 
 impl<'l> StrokeBuilder<'l> {
     pub(crate) fn new(
         options: &StrokeOptions,
-        attrib_buffer: &'l mut Vec<f32>,
+        attrib_buffer: &'l mut Vec<f64>,
         attrib_store: &'l mut SimpleAttributeStore,
         output: &'l mut dyn StrokeGeometryBuilder,
     ) -> Self {
@@ -388,11 +388,11 @@ impl<'l> StrokeBuilder<'l> {
     }
 
     #[inline]
-    pub fn set_miter_limit(&mut self, limit: f32) {
+    pub fn set_miter_limit(&mut self, limit: f64) {
         self.builder.options.miter_limit = limit;
     }
 
-    fn get_width(&self, attributes: Attributes) -> f32 {
+    fn get_width(&self, attributes: Attributes) -> f64 {
         if let Some(idx) = self.builder.options.variable_line_width {
             self.builder.options.line_width * attributes[idx]
         } else {
@@ -577,15 +577,15 @@ pub(crate) struct StrokeBuilderImpl<'l> {
     point_buffer: PointBuffer,
     firsts: ArrayVec<EndpointData, 2>,
     previous: Option<EndpointData>,
-    sub_path_start_advancement: f32,
-    square_merge_threshold: f32,
+    sub_path_start_advancement: f64,
+    square_merge_threshold: f64,
     may_need_empty_cap: bool,
 }
 
 impl<'l> StrokeBuilderImpl<'l> {
     pub(crate) fn new(
         options: &StrokeOptions,
-        attrib_buffer: &'l mut Vec<f32>,
+        attrib_buffer: &'l mut Vec<f64>,
         output: &'l mut dyn StrokeGeometryBuilder,
     ) -> Self {
         output.begin_geometry();
@@ -657,7 +657,7 @@ impl<'l> StrokeBuilderImpl<'l> {
         let mut validator = DebugValidator::new();
 
         let mut current_endpoint = EndpointId(u32::MAX);
-        let mut current_position = point(f32::NAN, f32::NAN);
+        let mut current_position = point(f64::NAN, f64::NAN);
 
         for evt in path.into_iter() {
             match evt {
@@ -770,7 +770,7 @@ impl<'l> StrokeBuilderImpl<'l> {
         let mut validator = DebugValidator::new();
 
         let mut current_endpoint = EndpointId(u32::MAX);
-        let mut current_position = point(f32::NAN, f32::NAN);
+        let mut current_position = point(f64::NAN, f64::NAN);
 
         let half_width = self.options.line_width * 0.5;
 
@@ -875,7 +875,7 @@ impl<'l> StrokeBuilderImpl<'l> {
         let mut validator = DebugValidator::new();
 
         let mut id = EndpointId(0);
-        let mut current_position = point(f32::NAN, f32::NAN);
+        let mut current_position = point(f64::NAN, f64::NAN);
 
         for evt in input {
             match evt {
@@ -950,7 +950,7 @@ impl<'l> StrokeBuilderImpl<'l> {
         &mut self,
         position: Point,
         endpoint: EndpointId,
-        width: f32,
+        width: f64,
         attributes: &dyn AttributeStore,
     ) {
         self.may_need_empty_cap = false;
@@ -972,7 +972,7 @@ impl<'l> StrokeBuilderImpl<'l> {
         &mut self,
         to: Point,
         endpoint: EndpointId,
-        width: f32,
+        width: f64,
         attributes: &dyn AttributeStore,
     ) {
         let half_width = width * 0.5;
@@ -990,11 +990,11 @@ impl<'l> StrokeBuilderImpl<'l> {
 
     pub(crate) fn quadratic_bezier_to(
         &mut self,
-        curve: &QuadraticBezierSegment<f32>,
+        curve: &QuadraticBezierSegment<f64>,
         from_id: EndpointId,
         to_id: EndpointId,
-        start_width: f32,
-        end_width: f32,
+        start_width: f64,
+        end_width: f64,
         attributes: &dyn AttributeStore,
     ) {
         flatten_quad(
@@ -1028,11 +1028,11 @@ impl<'l> StrokeBuilderImpl<'l> {
 
     pub(crate) fn cubic_bezier_to(
         &mut self,
-        curve: &CubicBezierSegment<f32>,
+        curve: &CubicBezierSegment<f64>,
         from_id: EndpointId,
         to_id: EndpointId,
-        start_width: f32,
-        end_width: f32,
+        start_width: f64,
+        end_width: f64,
         attributes: &dyn AttributeStore,
     ) {
         curve.for_each_flattened_with_t(self.options.tolerance, &mut |line, t| {
@@ -1102,7 +1102,7 @@ impl<'l> StrokeBuilderImpl<'l> {
 
     pub(crate) fn quadratic_bezier_to_fw(
         &mut self,
-        curve: &QuadraticBezierSegment<f32>,
+        curve: &QuadraticBezierSegment<f64>,
         from_id: EndpointId,
         to_id: EndpointId,
         attributes: &dyn AttributeStore,
@@ -1139,7 +1139,7 @@ impl<'l> StrokeBuilderImpl<'l> {
 
     pub(crate) fn cubic_bezier_to_fw(
         &mut self,
-        curve: &CubicBezierSegment<f32>,
+        curve: &CubicBezierSegment<f64>,
         from_id: EndpointId,
         to_id: EndpointId,
         attributes: &dyn AttributeStore,
@@ -1213,7 +1213,7 @@ impl<'l> StrokeBuilderImpl<'l> {
         // Make sure we re-compute the advancement instead of using the one found at the
         // beginning of the sub-path.
         let advancement = p.advancement;
-        p.advancement = f32::NAN;
+        p.advancement = f64::NAN;
         let segment_added = if self.options.variable_line_width.is_some() {
             self.step_impl(p, attributes)?
         } else {
@@ -1639,7 +1639,7 @@ fn compute_join_side_positions_fixed_width(
     prev: &EndpointData,
     join: &mut EndpointData,
     next: &EndpointData,
-    miter_limit: f32,
+    miter_limit: f64,
     vertex: &mut StrokeVertexData,
 ) -> Result<(), TessellationError> {
     let prev_tangent = join.position - prev.position;
@@ -1833,8 +1833,8 @@ fn compute_edge_attachment_positions(p0: &mut EndpointData, p1: &mut EndpointDat
 fn compute_side_attachment_positions(
     p0: &mut EndpointData,
     p1: &mut EndpointData,
-    edge_angle: f32,
-    vwidth_angle: f32,
+    edge_angle: f64,
+    vwidth_angle: f64,
     side: usize,
 ) {
     nan_check!(
@@ -2047,7 +2047,7 @@ fn compute_join_side_positions(
     prev: &EndpointData,
     join: &mut EndpointData,
     next: &EndpointData,
-    miter_limit: f32,
+    miter_limit: f64,
     side: usize,
 ) {
     nan_check!(join.position);
@@ -2202,7 +2202,7 @@ fn tessellate_first_edge(
             let intersection = clip_line
                 .to_f64()
                 .intersection(&side_line.to_f64())
-                .map(|p| p.to_f32())
+                .map(|p| p.to_f64())
                 .unwrap_or(first.side_points[side].next);
             side_position = intersection;
         }
@@ -2239,7 +2239,7 @@ fn get_clip_intersections(
     previous_normal: Vector,
     next_normal: Vector,
     normal: Vector,
-    clip_distance: f32,
+    clip_distance: f64,
 ) -> (Vector, Vector) {
     let clip_line = Line {
         point: normal.normalize().to_point() * clip_distance,
@@ -2261,12 +2261,12 @@ fn get_clip_intersections(
 
     let i1 = clip_line
         .intersection(&prev_line)
-        .map(|p| p.to_f32())
+        .map(|p| p.to_f64())
         .unwrap_or_else(|| normal.to_point())
         .to_vector();
     let i2 = clip_line
         .intersection(&next_line)
-        .map(|p| p.to_f32())
+        .map(|p| p.to_f64())
         .unwrap_or_else(|| normal.to_point())
         .to_vector();
 
@@ -2276,11 +2276,11 @@ fn get_clip_intersections(
 // Derived from:
 // miter_limit = miter_length / stroke_width
 // miter_limit = (normal.length() * half_width) / (2.0 * half_width)
-fn miter_limit_is_exceeded(normal: Vector, miter_limit: f32) -> bool {
+fn miter_limit_is_exceeded(normal: Vector, miter_limit: f64) -> bool {
     normal.square_length() > miter_limit * miter_limit * 4.0
 }
 
-fn side_sign(side: usize) -> f32 {
+fn side_sign(side: usize) -> f64 {
     if side == SIDE_NEGATIVE {
         -1.0
     } else {
@@ -2417,7 +2417,7 @@ impl PointBuffer {
 
 pub(crate) fn tessellate_round_cap(
     center: Point,
-    radius: f32,
+    radius: f64,
     start_normal: Vector,
     start_vertex: VertexId,
     end_vertex: VertexId,
@@ -2569,7 +2569,7 @@ pub(crate) fn tessellate_empty_round_cap(
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn tessellate_arc(
-    angle: (f32, f32),
+    angle: (f64, f64),
     va: VertexId,
     vb: VertexId,
     num_recursions: u32,
@@ -2614,12 +2614,12 @@ pub(crate) fn tessellate_arc(
 /// Extra vertex information from the `StrokeTessellator`.
 pub(crate) struct StrokeVertexData<'l> {
     pub(crate) position_on_path: Point,
-    pub(crate) half_width: f32,
+    pub(crate) half_width: f64,
     pub(crate) normal: Vector,
-    pub(crate) advancement: f32,
+    pub(crate) advancement: f64,
     pub(crate) side: Side,
     pub(crate) src: VertexSource,
-    pub(crate) buffer: &'l mut [f32],
+    pub(crate) buffer: &'l mut [f64],
     pub(crate) buffer_is_valid: bool,
 }
 
@@ -2657,13 +2657,13 @@ impl<'a, 'b> StrokeVertex<'a, 'b> {
     /// returned line width is equal to `StrokeOptions::line_width` multiplied by the
     /// line width modifier at this vertex.
     #[inline]
-    pub fn line_width(&self) -> f32 {
+    pub fn line_width(&self) -> f64 {
         self.0.half_width * 2.0
     }
 
     /// How far along the path this vertex is.
     #[inline]
-    pub fn advancement(&self) -> f32 {
+    pub fn advancement(&self) -> f64 {
         self.0.advancement
     }
 
@@ -2705,15 +2705,15 @@ impl<'a, 'b> StrokeVertex<'a, 'b> {
     }
 }
 
-pub(crate) fn circle_flattening_step(radius: f32, mut tolerance: f32) -> f32 {
+pub(crate) fn circle_flattening_step(radius: f64, mut tolerance: f64) -> f64 {
     // Don't allow high tolerance values (compared to the radius) to avoid edge cases.
-    tolerance = f32::min(tolerance, radius);
+    tolerance = f64::min(tolerance, radius);
     2.0 * ((radius - tolerance) / radius).acos()
 }
 
-fn flatten_quad<F>(curve: &QuadraticBezierSegment<f32>, tolerance: f32, cb: &mut F)
+fn flatten_quad<F>(curve: &QuadraticBezierSegment<f64>, tolerance: f64, cb: &mut F)
 where
-    F: FnMut(Point, f32, bool),
+    F: FnMut(Point, f64, bool),
 {
     if let Some(t_split) = find_sharp_turn(curve) {
         let (before, after) = curve.split(t_split);
@@ -3116,9 +3116,9 @@ trait IsNan {
     fn is_nan(&self) -> bool;
 }
 
-impl IsNan for f32 {
+impl IsNan for f64 {
     fn is_nan(&self) -> bool {
-        f32::is_nan(*self)
+        f64::is_nan(*self)
     }
 }
 
@@ -3134,7 +3134,7 @@ impl IsNan for Vector {
     }
 }
 
-fn find_sharp_turn(curve: &QuadraticBezierSegment<f32>) -> Option<f32> {
+fn find_sharp_turn(curve: &QuadraticBezierSegment<f64>) -> Option<f64> {
     // TODO: The various thresholds here should take the line width into account.
 
     let baseline = curve.to - curve.from;

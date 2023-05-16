@@ -5,7 +5,7 @@ use crate::path::PathEvent;
 
 use core::iter::IntoIterator;
 
-pub fn approximate_length<Iter>(path: Iter, tolerance: f32) -> f32
+pub fn approximate_length<Iter>(path: Iter, tolerance: f64) -> f64
 where
     Iter: IntoIterator<Item = PathEvent>,
 {

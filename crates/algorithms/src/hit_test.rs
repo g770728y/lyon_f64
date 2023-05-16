@@ -5,7 +5,7 @@ use crate::math::Point;
 use crate::path::{FillRule, PathEvent};
 
 /// Returns whether the point is inside the path.
-pub fn hit_test_path<Iter>(point: &Point, path: Iter, fill_rule: FillRule, tolerance: f32) -> bool
+pub fn hit_test_path<Iter>(point: &Point, path: Iter, fill_rule: FillRule, tolerance: f64) -> bool
 where
     Iter: IntoIterator<Item = PathEvent>,
 {
@@ -18,7 +18,7 @@ where
 }
 
 /// Compute the winding number of a given position with respect to the path.
-pub fn path_winding_number_at_position<Iter>(point: &Point, path: Iter, tolerance: f32) -> i32
+pub fn path_winding_number_at_position<Iter>(point: &Point, path: Iter, tolerance: f64) -> i32
 where
     Iter: IntoIterator<Item = PathEvent>,
 {
@@ -90,15 +90,15 @@ where
 
 fn test_segment(
     point: Point,
-    segment: &LineSegment<f32>,
+    segment: &LineSegment<f64>,
     winding: &mut i32,
     prev_winding: &mut Option<i32>,
 ) {
     let y0 = segment.from.y;
     let y1 = segment.to.y;
-    if f32::min(y0, y1) > point.y
-        || f32::max(y0, y1) < point.y
-        || f32::min(segment.from.x, segment.to.x) > point.x
+    if f64::min(y0, y1) > point.y
+        || f64::max(y0, y1) < point.y
+        || f64::min(segment.from.x, segment.to.x) > point.x
     {
         *prev_winding = None;
         return;

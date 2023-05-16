@@ -20188,9 +20188,9 @@ fn earcut_test(path: &[&[[i32; 2]]]) {
             continue;
         }
         let start = sub_path[0];
-        builder.begin(point(start[0] as f32, start[0] as f32));
+        builder.begin(point(start[0] as f64, start[0] as f64));
         for p in sub_path {
-            builder.line_to(point(p[0] as f32, p[1] as f32));
+            builder.line_to(point(p[0] as f64, p[1] as f64));
         }
         builder.end(true);
     }
@@ -20199,7 +20199,7 @@ fn earcut_test(path: &[&[[i32; 2]]]) {
     test_path(path.as_slice(), FillRule::NonZero);
 }
 
-fn earcut_test_f32(path: &[&[[f32; 2]]]) {
+fn earcut_test_f32(path: &[&[[f64; 2]]]) {
     let mut builder = Path::builder();
     for &sub_path in path {
         if sub_path.is_empty() {

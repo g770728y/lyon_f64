@@ -4,7 +4,7 @@ use lyon_path::{
     ArcFlags, Attributes, Polygon, Winding,
 };
 
-pub type Point = euclid::default::Point2D<f32>;
+pub type Point = euclid::default::Point2D<f64>;
 
 /// Adds a sub-path from a polygon but rounds the corners.
 ///
@@ -13,7 +13,7 @@ pub type Point = euclid::default::Point2D<f32>;
 pub fn add_rounded_polygon<B: PathBuilder>(
     builder: &mut B,
     polygon: Polygon<Point>,
-    radius: f32,
+    radius: f64,
     attributes: Attributes,
 ) {
     if polygon.points.len() < 2 {
@@ -66,13 +66,13 @@ pub fn add_rounded_polygon<B: PathBuilder>(
     builder.end(polygon.closed);
 }
 
-fn clamp_radius(radius: f32, p_previous: Point, p_current: Point, p_next: Point) -> f32 {
+fn clamp_radius(radius: f64, p_previous: Point, p_current: Point, p_next: Point) -> f64 {
     let shorter_edge = ((p_current - p_next).length()).min((p_previous - p_current).length());
 
     radius.min(shorter_edge * 0.5)
 }
 
-fn get_point_between(p1: Point, p2: Point, radius: f32) -> Point {
+fn get_point_between(p1: Point, p2: Point, radius: f64) -> Point {
     let dist = p1.distance_to(p2);
     let ratio = radius / dist;
 
@@ -90,8 +90,8 @@ fn get_winding(p0: Point, p1: Point, p2: Point) -> Winding {
 
 fn arc<B: PathBuilder>(
     builder: &mut B,
-    radii: Vector<f32>,
-    x_rotation: Angle<f32>,
+    radii: Vector<f64>,
+    x_rotation: Angle<f64>,
     flags: ArcFlags,
     from: Point,
     to: Point,
@@ -122,7 +122,7 @@ fn rounded_polygon() {
     use alloc::vec::Vec;
     use euclid::approxeq::ApproxEq;
 
-    type Point = euclid::Point2D<f32, euclid::UnknownUnit>;
+    type Point = euclid::Point2D<f64, euclid::UnknownUnit>;
     type Event = path::Event<Point, Point>;
     let arrow_points = [
         point(-1.0, -0.3),

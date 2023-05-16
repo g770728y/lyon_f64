@@ -19,7 +19,7 @@ pub struct Hit {
 // to speed things up.
 
 /// Find the closest collision between a ray and the path.
-pub fn raycast_path<Iter>(ray: &Ray, path: Iter, tolerance: f32) -> Option<Hit>
+pub fn raycast_path<Iter>(ray: &Ray, path: Iter, tolerance: f64) -> Option<Hit>
 where
     Iter: IntoIterator<Item = PathEvent>,
 {
@@ -33,7 +33,7 @@ where
             point: ray.origin,
             vector: ray.direction,
         },
-        min_dot: f32::MAX,
+        min_dot: f64::MAX,
         result: point(0.0, 0.0),
         normal: vector(0.0, 0.0),
     };
@@ -80,7 +80,7 @@ where
         }
     }
 
-    if state.min_dot == f32::MAX {
+    if state.min_dot == f64::MAX {
         return None;
     }
 
@@ -95,13 +95,13 @@ where
 }
 
 struct RayCastInner {
-    ray: Line<f32>,
-    min_dot: f32,
+    ray: Line<f64>,
+    min_dot: f64,
     result: Point,
     normal: Vector,
 }
 
-fn test_segment(state: &mut RayCastInner, segment: &LineSegment<f32>) {
+fn test_segment(state: &mut RayCastInner, segment: &LineSegment<f64>) {
     if let Some(pos) = segment.line_intersection(&state.ray) {
         let dot = (pos - state.ray.point).dot(state.ray.vector);
         if dot >= 0.0 && dot < state.min_dot {

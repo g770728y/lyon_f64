@@ -136,7 +136,7 @@ impl<Iter: Iterator<Item = char>> Source<Iter> {
 /// Note that only endpoints have custom attributes, control points do not.
 #[derive(Debug, Default)]
 pub struct PathParser {
-    attribute_buffer: Vec<f32>,
+    attribute_buffer: Vec<f64>,
     float_buffer: String,
     num_attributes: usize,
     stop_at: Option<char>,
@@ -410,7 +410,7 @@ impl PathParser {
     fn parse_number(
         &mut self,
         src: &mut Source<impl Iterator<Item = char>>,
-    ) -> Result<f32, ParseError> {
+    ) -> Result<f64, ParseError> {
         self.float_buffer.clear();
 
         src.skip_whitespace();
@@ -453,7 +453,7 @@ impl PathParser {
             src.advance_one();
         }
 
-        match self.float_buffer.parse::<f32>() {
+        match self.float_buffer.parse::<f64>() {
             Ok(val) => Ok(val),
             Err(_) => Err(ParseError::Number {
                 src: std::mem::take(&mut self.float_buffer),

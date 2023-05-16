@@ -8,7 +8,7 @@ use num_traits::Float;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct ToRectangleOptions {
-    pub tolerance: f32,
+    pub tolerance: f64,
     pub auto_close: bool,
     /// If true don't consider open sub-paths with no segment.
     pub ignore_open_empty_sub_paths: bool,
@@ -18,7 +18,7 @@ pub struct ToRectangleOptions {
 
 impl ToRectangleOptions {
     /// Default parameters relevant for filling paths.
-    pub fn fill(tolerance: f32) -> Self {
+    pub fn fill(tolerance: f64) -> Self {
         ToRectangleOptions {
             tolerance,
             auto_close: true,
@@ -30,7 +30,7 @@ impl ToRectangleOptions {
     /// Default parameters relevant for stroking paths.
     ///
     /// Accepts a subset of the `fill` configuration.
-    pub fn stroke(tolerance: f32) -> Self {
+    pub fn stroke(tolerance: f64) -> Self {
         ToRectangleOptions {
             tolerance,
             auto_close: false,
@@ -156,7 +156,7 @@ struct ToRectangle {
     current_dir: Dir,
     idx: usize,
     dirs: [Dir; 4],
-    tolerance: f32,
+    tolerance: f64,
 }
 
 impl ToRectangle {
@@ -217,7 +217,7 @@ impl Default for ToRectangleOptions {
     }
 }
 
-fn is_between(x: f32, from: f32, to: f32) -> bool {
+fn is_between(x: f64, from: f64, to: f64) -> bool {
     (from <= x && x <= to) || (to <= x && x <= from)
 }
 
@@ -242,7 +242,7 @@ impl Dir {
     }
 }
 
-fn direction(v: Vector, tolerance: f32) -> Option<Dir> {
+fn direction(v: Vector, tolerance: f64) -> Option<Dir> {
     if !v.is_finite() {
         return None;
     }

@@ -75,13 +75,13 @@
 //! // Our custom vertex.
 //! #[derive(Copy, Clone, Debug)]
 //! pub struct MyVertex {
-//!   position: [f32; 2],
-//!   color: [f32; 4],
+//!   position: [f64; 2],
+//!   color: [f64; 4],
 //! }
 //!
 //! // The vertex constructor. This is the object that will be used to create the custom
 //! // vertices from the information provided by the tessellators.
-//! struct WithColor([f32; 4]);
+//! struct WithColor([f64; 4]);
 //!
 //! impl FillVertexConstructor<MyVertex> for WithColor {
 //!     fn new_vertex(&mut self, vertex: FillVertex) -> MyVertex {

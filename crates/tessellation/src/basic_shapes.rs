@@ -4,7 +4,7 @@ use crate::{
     FillGeometryBuilder, FillOptions, FillVertex, TessellationError, TessellationResult, VertexId,
 };
 
-use std::f32::consts::PI;
+use std::f64::consts::PI;
 
 pub fn fill_rectangle(rect: &Box2D, output: &mut dyn FillGeometryBuilder) -> TessellationResult {
     output.begin_geometry();
@@ -36,7 +36,7 @@ pub fn fill_rectangle(rect: &Box2D, output: &mut dyn FillGeometryBuilder) -> Tes
 
 pub fn fill_circle(
     center: Point,
-    radius: f32,
+    radius: f64,
     options: &FillOptions,
     output: &mut dyn FillGeometryBuilder,
 ) -> TessellationResult {
@@ -145,17 +145,17 @@ fn bottom_right(rect: &Box2D) -> Point {
 //  r: the radius
 //  t: the tolerance threshold
 //  d: the line segment length
-pub(crate) fn circle_flattening_step(radius: f32, mut tolerance: f32) -> f32 {
+pub(crate) fn circle_flattening_step(radius: f64, mut tolerance: f64) -> f64 {
     // Don't allow high tolerance values (compared to the radius) to avoid edge cases.
-    tolerance = f32::min(tolerance, radius);
-    2.0 * f32::sqrt(2.0 * tolerance * radius - tolerance * tolerance)
+    tolerance = f64::min(tolerance, radius);
+    2.0 * f64::sqrt(2.0 * tolerance * radius - tolerance * tolerance)
 }
 
 // recursively tessellate the rounded corners.
 fn fill_border_radius(
     center: Point,
-    angle: (f32, f32),
-    radius: f32,
+    angle: (f64, f64),
+    radius: f64,
     va: VertexId,
     vb: VertexId,
     num_recursions: u32,

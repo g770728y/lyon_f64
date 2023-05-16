@@ -5,7 +5,7 @@ use crate::path::{Path, PathSlice};
 use crate::{FillOptions, FillRule, FillTessellator, FillVertex, TessellationError, VertexId};
 
 use std::env;
-use std::f32::consts::PI;
+use std::f64::consts::PI;
 
 fn tessellate(path: PathSlice, fill_rule: FillRule, log: bool) -> Result<usize, TessellationError> {
     let mut buffers: VertexBuffers<Point, u16> = VertexBuffers::new();
@@ -127,7 +127,7 @@ fn test_path_internal(
     panic!("Test failed with fill rule {:?}.", fill_rule);
 }
 
-fn test_path_with_rotations(path: Path, step: f32, expected_triangle_count: Option<usize>) {
+fn test_path_with_rotations(path: Path, step: f64, expected_triangle_count: Option<usize>) {
     let mut angle = Angle::radians(0.0);
     while angle.radians < PI * 2.0 {
         //println!("\n\n ==================== angle = {:?}", angle);
@@ -422,7 +422,7 @@ fn test_rust_logo_with_intersection() {
 }
 
 #[cfg(test)]
-fn scale_path(path: &mut Path, scale: f32) {
+fn scale_path(path: &mut Path, scale: f64) {
     *path = path.clone().transformed(&Scale::new(scale))
 }
 
@@ -799,7 +799,7 @@ fn angle_precision() {
 
 #[test]
 fn n_segments_intersecting() {
-    use std::f32::consts::PI;
+    use std::f64::consts::PI;
 
     // This test creates a lot of segments that intersect at the same
     // position (center). Very good at finding precision issues.
@@ -809,12 +809,12 @@ fn n_segments_intersecting() {
 
         let center = point(-2.0, -5.0);
         let n = i * 4 - 1;
-        let delta = PI / n as f32;
+        let delta = PI / n as f64;
         let mut radius = 1000.0;
         builder.begin(center + vector(radius, 0.0));
         builder.line_to(center - vector(-radius, 0.0));
         for i in 0..n {
-            let (s, c) = (i as f32 * delta).sin_cos();
+            let (s, c) = (i as f64 * delta).sin_cos();
             builder.line_to(center + vector(c, s) * radius);
             builder.line_to(center - vector(c, s) * radius);
             radius = -radius;
@@ -898,7 +898,7 @@ fn test_colinear_touching_squares3() {
 #[test]
 fn test_unknown_issue_1() {
     // This test case used to fail but does not fail anymore, probably thanks to
-    // the fixed-to-f32 workaround (cf.) test_fixed_to_f32_precision.
+    // the fixed-to-f64 workaround (cf.) test_fixed_to_f32_precision.
     // TODO: figure out what the issue was and what fixed it.
     let mut builder = Path::builder();
 
@@ -1117,7 +1117,7 @@ fn test_close_at_first_position() {
 #[test]
 fn test_fixed_to_f32_precision() {
     // This test appears to hit a precision issue in the conversion from fixed 16.16
-    // to f32, causing a point to appear slightly above another when it should not.
+    // to f64, causing a point to appear slightly above another when it should not.
     let mut builder = Path::builder();
 
     builder.begin(point(68.97998, 796.05));
@@ -2137,7 +2137,7 @@ fn very_large_path() {
     /// Try tessellating a path with a large number of endpoints.
     const N: usize = 1_000_000;
 
-    let mut d: f32 = 0.0;
+    let mut d: f64 = 0.0;
     let mut builder = Path::builder();
     builder.begin(point(0.0, 0.0));
     for _ in 0..(N / 2) {

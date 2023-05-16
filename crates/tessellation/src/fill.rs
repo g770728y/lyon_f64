@@ -15,7 +15,7 @@ use crate::{
 };
 use float_next_after::NextAfter;
 use std::cmp::Ordering;
-use std::f32::consts::FRAC_1_SQRT_2;
+use std::f64::consts::FRAC_1_SQRT_2;
 use std::mem;
 use std::ops::Range;
 
@@ -48,10 +48,10 @@ impl Side {
 type SpanIdx = i32;
 type ActiveEdgeIdx = usize;
 
-// It's a bit odd but this consistently performs a bit better than f32::max, probably
+// It's a bit odd but this consistently performs a bit better than f64::max, probably
 // because the latter deals with NaN.
 #[inline(always)]
-fn fmax(a: f32, b: f32) -> f32 {
+fn fmax(a: f64, b: f64) -> f64 {
     if a > b {
         a
     } else {
@@ -59,8 +59,8 @@ fn fmax(a: f32, b: f32) -> f32 {
     }
 }
 
-fn slope(v: Vector) -> f32 {
-    v.x / (v.y.max(f32::MIN))
+fn slope(v: Vector) -> f64 {
+    v.x / (v.y.max(f64::MIN))
 }
 
 #[cfg(debug_assertions)]
@@ -158,7 +158,7 @@ struct ActiveEdge {
     from_id: VertexId,
     src_edge: TessEventId,
 
-    range_end: f32,
+    range_end: f64,
 }
 
 #[test]
@@ -169,18 +169,18 @@ fn active_edge_size() {
 
 impl ActiveEdge {
     #[inline(always)]
-    fn min_x(&self) -> f32 {
+    fn min_x(&self) -> f64 {
         self.from.x.min(self.to.x)
     }
 
     #[inline(always)]
-    fn max_x(&self) -> f32 {
+    fn max_x(&self) -> f64 {
         fmax(self.from.x, self.to.x)
     }
 }
 
 impl ActiveEdge {
-    fn solve_x_for_y(&self, y: f32) -> f32 {
+    fn solve_x_for_y(&self, y: f64) -> f64 {
         // Because of float precision hazard, solve_x_for_y can
         // return something slightly out of the min/max range which
         // causes the ordering to be inconsistent with the way the
@@ -300,11 +300,11 @@ impl Spans {
 #[derive(Copy, Clone, Debug)]
 struct PendingEdge {
     to: Point,
-    sort_key: f32,
+    sort_key: f64,
     // Index in events.edge_data
     src_edge: TessEventId,
     winding: i16,
-    range_end: f32,
+    range_end: f64,
 }
 
 /// A Context object that can tessellate fill operations for complex paths.
@@ -395,7 +395,7 @@ struct PendingEdge {
 /// way to generate new attributes is to linearly interpolate these numbers between the endpoints
 /// of the edges they originate from.
 ///
-/// Custom endpoint attributes are represented as `&[f32]` slices accessible via
+/// Custom endpoint attributes are represented as `&[f64]` slices accessible via
 /// `FillVertex::interpolated_attributes`. All vertices, whether they originate from a single
 /// endpoint or some more complex source, have exactly the same number of attributes.
 /// Without having to know about the meaning of attributes, the tessellator can either
@@ -472,8 +472,8 @@ struct PendingEdge {
 /// let path = path_builder.build();
 ///
 /// struct MyVertex {
-///     x: f32, y: f32,
-///     r: f32, g: f32, b: f32, a: f32,
+///     x: f64, y: f64,
+///     r: f64, g: f64, b: f64, a: f64,
 /// }
 /// // A custom vertex constructor, see the geometry_builder module.
 /// struct Ctor;
@@ -526,11 +526,11 @@ pub struct FillTessellator {
     edges_below: Vec<PendingEdge>,
     fill_rule: FillRule,
     orientation: Orientation,
-    tolerance: f32,
+    tolerance: f64,
     fill: Spans,
     log: bool,
     assume_no_intersection: bool,
-    attrib_buffer: Vec<f32>,
+    attrib_buffer: Vec<f64>,
 
     scan: ActiveEdgeScan,
     events: EventQueue,
@@ -551,7 +551,7 @@ impl FillTessellator {
         let log = false;
 
         FillTessellator {
-            current_position: point(f32::MIN, f32::MIN),
+            current_position: point(f64::MIN, f64::MIN),
             current_vertex: VertexId::INVALID,
             current_event_id: INVALID_EVENT_ID,
             active: ActiveEdges { edges: Vec::new() },
@@ -662,7 +662,7 @@ impl FillTessellator {
     pub fn tessellate_circle(
         &mut self,
         center: Point,
-        radius: f32,
+        radius: f64,
         options: &FillOptions,
         output: &mut dyn FillGeometryBuilder,
     ) -> TessellationResult {
@@ -826,7 +826,7 @@ impl FillTessellator {
     ) -> Result<(), TessellationError> {
         log_svg_preamble(self);
 
-        let mut _prev_position = point(f32::MIN, f32::MIN);
+        let mut _prev_position = point(f64::MIN, f64::MIN);
         self.current_event_id = self.events.first_id();
         while self.events.valid_id(self.current_event_id) {
             self.initialize_events(attrib_store, output)?;
@@ -1273,7 +1273,7 @@ impl FillTessellator {
     fn check_remaining_edges(
         &self,
         active_edge_idx: usize,
-        current_x: f32,
+        current_x: f64,
     ) -> Result<(), InternalError> {
         // This function typically takes about 2.5% ~ 3% of the profile, so not necessarily the best
         // target for optimization. That said all of the work done here is only robustness checks
@@ -1672,7 +1672,7 @@ impl FillTessellator {
         edge_below: &mut PendingEdge,
         below_segment: &LineSegment<f64>,
     ) {
-        let mut intersection_position = below_segment.sample(tb).to_f32();
+        let mut intersection_position = below_segment.sample(tb).to_f64();
         tess_log!(
             self,
             "-> intersection at: {:?} t={:?}|{:?}",
@@ -1694,7 +1694,7 @@ impl FillTessellator {
         if self.current_position == intersection_position {
             active_edge.from = intersection_position;
             let src_range = &mut self.events.edge_data[active_edge.src_edge as usize].range;
-            let remapped_ta = remap_t_in_range(ta as f32, src_range.start..active_edge.range_end);
+            let remapped_ta = remap_t_in_range(ta as f64, src_range.start..active_edge.range_end);
             src_range.start = remapped_ta;
 
             return;
@@ -1702,7 +1702,7 @@ impl FillTessellator {
 
         if !is_after(intersection_position, self.current_position) {
             tess_log!(self, "fixup the intersection");
-            intersection_position.y = self.current_position.y.next_after(f32::INFINITY);
+            intersection_position.y = self.current_position.y.next_after(f64::INFINITY);
         }
 
         assert!(
@@ -1728,7 +1728,7 @@ impl FillTessellator {
 
         if active_edge.to != intersection_position && active_edge.from != intersection_position {
             let remapped_ta = remap_t_in_range(
-                ta as f32,
+                ta as f64,
                 a_src_edge_data.range.start..active_edge.range_end,
             );
 
@@ -1768,7 +1768,7 @@ impl FillTessellator {
         if edge_below.to != intersection_position && self.current_position != intersection_position
         {
             let remapped_tb =
-                remap_t_in_range(tb as f32, b_src_edge_data.range.start..edge_below.range_end);
+                remap_t_in_range(tb as f64, b_src_edge_data.range.start..edge_below.range_end);
 
             if is_after(edge_below.to, intersection_position) {
                 let edge_data = EdgeData {
@@ -1837,7 +1837,7 @@ impl FillTessellator {
         let mut keys = Vec::with_capacity(self.active.edges.len());
 
         let mut has_merge_vertex = false;
-        let mut prev_x = f32::NAN;
+        let mut prev_x = f64::NAN;
         for (i, edge) in self.active.edges.iter().enumerate() {
             if edge.is_merge {
                 debug_assert!(!prev_x.is_nan());
@@ -2001,7 +2001,7 @@ impl FillTessellator {
             let a_slope = self.edges_below[a_idx].sort_key;
             let b_slope = self.edges_below[b_idx].sort_key;
 
-            const THRESHOLD: f32 = 0.00005;
+            const THRESHOLD: f64 = 0.00005;
 
             // The slope function preserves the ordering for sorting but isn't a very good approximation
             // of the angle as edges get closer to horizontal.
@@ -2082,7 +2082,7 @@ impl FillTessellator {
     }
 
     fn reset(&mut self) {
-        self.current_position = point(f32::MIN, f32::MIN);
+        self.current_position = point(f64::MIN, f64::MIN);
         self.current_vertex = VertexId::INVALID;
         self.current_event_id = INVALID_EVENT_ID;
         self.active.edges.clear();
@@ -2136,7 +2136,7 @@ pub struct FillVertex<'l> {
     pub(crate) position: Point,
     pub(crate) events: &'l EventQueue,
     pub(crate) current_event: TessEventId,
-    pub(crate) attrib_buffer: &'l mut [f32],
+    pub(crate) attrib_buffer: &'l mut [f64],
     pub(crate) attrib_store: Option<&'l dyn AttributeStore>,
 }
 
@@ -2312,7 +2312,7 @@ impl<'l> Iterator for VertexSourceIterator<'l> {
     }
 }
 
-fn remap_t_in_range(val: f32, range: Range<f32>) -> f32 {
+fn remap_t_in_range(val: f64, range: Range<f64>) -> f64 {
     if range.end > range.start {
         let d = range.end - range.start;
         range.start + val * d
@@ -2430,7 +2430,7 @@ impl<'l> FillBuilder<'l> {
     pub fn add_circle(
         &mut self,
         center: Point,
-        radius: f32,
+        radius: f64,
         winding: Winding,
         attributes: Attributes,
     ) {
@@ -2562,7 +2562,7 @@ impl<'l> PathBuilder for FillBuilder<'l> {
         self.reserve(endpoints, ctrl_points)
     }
 
-    fn add_circle(&mut self, center: Point, radius: f32, winding: Winding, attributes: Attributes) {
+    fn add_circle(&mut self, center: Point, radius: f64, winding: Winding, attributes: Attributes) {
         self.add_circle(center, radius, winding, attributes)
     }
 }
@@ -2641,7 +2641,7 @@ fn at_endpoint(src: &VertexSource, endpoint: EndpointId) -> bool {
 }
 
 #[cfg(test)]
-fn on_edge(src: &VertexSource, from_id: EndpointId, to_id: EndpointId, d: f32) -> bool {
+fn on_edge(src: &VertexSource, from_id: EndpointId, to_id: EndpointId, d: f64) -> bool {
     match src {
         VertexSource::Edge { t, from, to, .. } => {
             *from == from_id

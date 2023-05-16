@@ -27,7 +27,7 @@ pub(crate) struct Event {
 #[derive(Clone, Debug)]
 pub(crate) struct EdgeData {
     pub to: Point,
-    pub range: std::ops::Range<f32>,
+    pub range: std::ops::Range<f64>,
     pub winding: i16,
     pub is_edge: bool,
     pub from_id: EndpointId,
@@ -80,7 +80,7 @@ impl EventQueue {
     /// The tolerance threshold is used for curve flattening approximation. See the
     /// [Flattening and tolerance](index.html#flattening-and-tolerance) section of the
     /// crate documentation.
-    pub fn from_path(tolerance: f32, path: impl IntoIterator<Item = PathEvent>) -> Self {
+    pub fn from_path(tolerance: f64, path: impl IntoIterator<Item = PathEvent>) -> Self {
         let path = path.into_iter();
         let (min, max) = path.size_hint();
         let capacity = max.unwrap_or(min);
@@ -98,7 +98,7 @@ impl EventQueue {
     /// [Flattening and tolerance](index.html#flattening-and-tolerance) section of the
     /// crate documentation.
     pub fn from_path_with_ids(
-        tolerance: f32,
+        tolerance: f64,
         sweep_orientation: Orientation,
         path: impl IntoIterator<Item = IdEvent>,
         positions: &impl PositionStore,
@@ -112,13 +112,13 @@ impl EventQueue {
         builder.build()
     }
 
-    pub fn into_builder(mut self, tolerance: f32) -> EventQueueBuilder {
+    pub fn into_builder(mut self, tolerance: f64) -> EventQueueBuilder {
         self.reset();
         EventQueueBuilder {
             queue: self,
-            current: point(f32::NAN, f32::NAN),
-            prev: point(f32::NAN, f32::NAN),
-            second: point(f32::NAN, f32::NAN),
+            current: point(f64::NAN, f64::NAN),
+            prev: point(f64::NAN, f64::NAN),
+            second: point(f64::NAN, f64::NAN),
             nth: 0,
             tolerance,
             prev_endpoint_id: EndpointId(u32::MAX),
@@ -237,7 +237,7 @@ impl EventQueue {
 
         self.push_unsorted(position);
         self.edge_data.push(EdgeData {
-            to: point(f32::NAN, f32::NAN),
+            to: point(f64::NAN, f64::NAN),
             range: 0.0..0.0,
             winding: 0,
             is_edge: false,
@@ -436,7 +436,7 @@ impl EventQueue {
 
     fn assert_sorted(&self) {
         let mut current = self.first;
-        let mut pos = point(f32::MIN, f32::MIN);
+        let mut pos = point(f64::MIN, f64::MIN);
         let mut n = 0;
         while self.valid_id(current) {
             assert!(is_after(self.events[current as usize].position, pos));
@@ -459,21 +459,21 @@ pub struct EventQueueBuilder {
     second: Point,
     nth: u32,
     queue: EventQueue,
-    tolerance: f32,
+    tolerance: f64,
     prev_endpoint_id: EndpointId,
     validator: DebugValidator,
 }
 
 impl EventQueueBuilder {
-    pub fn new(tolerance: f32) -> Self {
+    pub fn new(tolerance: f64) -> Self {
         EventQueue::new().into_builder(tolerance)
     }
 
-    pub fn with_capacity(cap: usize, tolerance: f32) -> Self {
+    pub fn with_capacity(cap: usize, tolerance: f64) -> Self {
         EventQueue::with_capacity(cap).into_builder(tolerance)
     }
 
-    pub fn set_tolerance(&mut self, tolerance: f32) {
+    pub fn set_tolerance(&mut self, tolerance: f64) {
         self.tolerance = tolerance;
     }
 
@@ -487,7 +487,7 @@ impl EventQueueBuilder {
 
     pub fn set_path(
         &mut self,
-        tolerance: f32,
+        tolerance: f64,
         sweep_orientation: Orientation,
         path: impl IntoIterator<Item = PathEvent>,
     ) {
@@ -557,7 +557,7 @@ impl EventQueueBuilder {
 
     pub fn set_path_with_ids(
         &mut self,
-        tolerance: f32,
+        tolerance: f64,
         sweep_orientation: Orientation,
         path_events: impl IntoIterator<Item = IdEvent>,
         points: &impl PositionStore,
@@ -642,7 +642,7 @@ impl EventQueueBuilder {
     fn vertex_event(&mut self, at: Point, endpoint_id: EndpointId) {
         self.queue.push_unsorted(at);
         self.queue.edge_data.push(EdgeData {
-            to: point(f32::NAN, f32::NAN),
+            to: point(f64::NAN, f64::NAN),
             range: 0.0..0.0,
             winding: 0,
             is_edge: false,
@@ -651,10 +651,10 @@ impl EventQueueBuilder {
         });
     }
 
-    fn vertex_event_on_curve(&mut self, at: Point, t: f32, from_id: EndpointId, to_id: EndpointId) {
+    fn vertex_event_on_curve(&mut self, at: Point, t: f64, from_id: EndpointId, to_id: EndpointId) {
         self.queue.push_unsorted(at);
         self.queue.edge_data.push(EdgeData {
-            to: point(f32::NAN, f32::NAN),
+            to: point(f64::NAN, f64::NAN),
             range: t..t,
             winding: 0,
             is_edge: false,
@@ -697,12 +697,12 @@ impl EventQueueBuilder {
     #[allow(clippy::too_many_arguments)]
     fn add_edge(
         &mut self,
-        edge: &LineSegment<f32>,
+        edge: &LineSegment<f64>,
         mut winding: i16,
         from_id: EndpointId,
         to_id: EndpointId,
-        mut t0: f32,
-        mut t1: f32,
+        mut t0: f64,
+        mut t1: f64,
     ) {
         if edge.from == edge.to {
             return;
@@ -730,7 +730,7 @@ impl EventQueueBuilder {
         self.nth += 1;
     }
 
-    pub fn line_segment(&mut self, to: Point, to_id: EndpointId, t0: f32, t1: f32) {
+    pub fn line_segment(&mut self, to: Point, to_id: EndpointId, t0: f64, t1: f64) {
         self.validator.edge();
 
         let from = self.current;

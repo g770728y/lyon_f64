@@ -50,7 +50,7 @@ use core::ops::Range;
 use alloc::vec::Vec;
 
 /// Walks along the path staring at offset `start` and applies a `Pattern`.
-pub fn walk_along_path<Iter>(path: Iter, start: f32, tolerance: f32, pattern: &mut dyn Pattern)
+pub fn walk_along_path<Iter>(path: Iter, start: f64, tolerance: f64, pattern: &mut dyn Pattern)
 where
     Iter: IntoIterator<Item = PathEvent>,
 {
@@ -67,7 +67,7 @@ where
 pub struct WalkerEvent<'l> {
     pub position: Point,
     pub tangent: Vector,
-    pub distance: f32,
+    pub distance: f64,
     pub attributes: Attributes<'l>,
 }
 
@@ -80,13 +80,13 @@ pub struct WalkerEvent<'l> {
 ///
 /// See the `RegularPattern` and `RepeatedPattern` implementations.
 /// This trait is also implemented for all functions/closures with signature
-/// `FnMut(WalkerEvent) -> Option<f32>`.
+/// `FnMut(WalkerEvent) -> Option<f64>`.
 pub trait Pattern {
     /// This method is invoked at each step along the path.
     ///
     /// If this method returns None, path walking stops. Otherwise the returned
     /// value is the distance along the path to the next element in the pattern.
-    fn next(&mut self, event: WalkerEvent) -> Option<f32>;
+    fn next(&mut self, event: WalkerEvent) -> Option<f64>;
 
     /// Invoked at the start each sub-path.
     ///
@@ -95,7 +95,7 @@ pub trait Pattern {
     ///
     /// If this method returns None, path walking stops. Otherwise the returned
     /// value is the distance along the path to the next element in the pattern.
-    fn begin(&mut self, distance: f32) -> Option<f32> {
+    fn begin(&mut self, distance: f64) -> Option<f64> {
         Some(distance)
     }
 }
@@ -103,33 +103,33 @@ pub trait Pattern {
 /// A helper struct to walk along a flattened path using a builder API.
 pub struct PathWalker<'l> {
     prev: Point,
-    tolerance: f32,
-    advancement: f32,
-    leftover: f32,
-    next_distance: f32,
+    tolerance: f64,
+    advancement: f64,
+    leftover: f64,
+    next_distance: f64,
     first: Point,
     need_moveto: bool,
     done: bool,
-    prev_attributes: Vec<f32>,
-    attribute_buffer: Vec<f32>,
-    first_attributes: Vec<f32>,
+    prev_attributes: Vec<f64>,
+    attribute_buffer: Vec<f64>,
+    first_attributes: Vec<f64>,
     num_attributes: usize,
 
     pattern: &'l mut dyn Pattern,
 }
 
 impl<'l> PathWalker<'l> {
-    pub fn new(start: f32, tolerance: f32, pattern: &'l mut dyn Pattern) -> NoAttributes<Self> {
+    pub fn new(start: f64, tolerance: f64, pattern: &'l mut dyn Pattern) -> NoAttributes<Self> {
         NoAttributes::wrap(Self::with_attributes(0, start, tolerance, pattern))
     }
 
     pub fn with_attributes(
         num_attributes: usize,
-        start: f32,
-        tolerance: f32,
+        start: f64,
+        tolerance: f64,
         pattern: &'l mut dyn Pattern,
     ) -> Self {
-        let start = f32::max(start, 0.0);
+        let start = f64::max(start, 0.0);
         PathWalker {
             prev: point(0.0, 0.0),
             first: point(0.0, 0.0),
@@ -150,9 +150,9 @@ impl<'l> PathWalker<'l> {
     fn edge(
         &mut self,
         to: Point,
-        t: Range<f32>,
+        t: Range<f64>,
         attributes: Attributes,
-        pos_cb: &dyn Fn(f32) -> (Point, Vector),
+        pos_cb: &dyn Fn(f64) -> (Point, Vector),
     ) {
         debug_assert!(!self.need_moveto);
 
@@ -353,7 +353,7 @@ pub struct RegularPattern<Cb> {
     /// The function to call at each step.
     pub callback: Cb,
     /// A constant interval between each step.
-    pub interval: f32,
+    pub interval: f64,
 }
 
 impl<Cb> Pattern for RegularPattern<Cb>
@@ -361,7 +361,7 @@ where
     Cb: FnMut(WalkerEvent) -> bool,
 {
     #[inline]
-    fn next(&mut self, event: WalkerEvent) -> Option<f32> {
+    fn next(&mut self, event: WalkerEvent) -> Option<f64> {
         if !(self.callback)(event) {
             return None;
         }
@@ -377,7 +377,7 @@ pub struct RepeatedPattern<'l, Cb> {
     /// The function to call at each step.
     pub callback: Cb,
     /// The repeated interval sequence.
-    pub intervals: &'l [f32],
+    pub intervals: &'l [f64],
     /// The index of the next interval in the sequence.
     pub index: usize,
 }
@@ -387,7 +387,7 @@ where
     Cb: FnMut(WalkerEvent) -> bool,
 {
     #[inline]
-    fn next(&mut self, event: WalkerEvent) -> Option<f32> {
+    fn next(&mut self, event: WalkerEvent) -> Option<f64> {
         if !(self.callback)(event) {
             return None;
         }
@@ -399,10 +399,10 @@ where
 
 impl<Cb> Pattern for Cb
 where
-    Cb: FnMut(WalkerEvent) -> Option<f32>,
+    Cb: FnMut(WalkerEvent) -> Option<f64>,
 {
     #[inline]
-    fn next(&mut self, event: WalkerEvent) -> Option<f32> {
+    fn next(&mut self, event: WalkerEvent) -> Option<f64> {
         (self)(event)
     }
 }
@@ -483,7 +483,7 @@ fn walk_with_leftover() {
 fn walk_starting_after() {
     // With a starting distance that is greater than the path, the
     // callback should never be called.
-    let cb = &mut |_event: WalkerEvent| -> Option<f32> { panic!() };
+    let cb = &mut |_event: WalkerEvent| -> Option<f64> { panic!() };
     let mut walker = PathWalker::new(10.0, 0.1, cb);
 
     walker.begin(point(0.0, 0.0));

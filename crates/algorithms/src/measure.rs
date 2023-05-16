@@ -21,13 +21,13 @@ type EndpointPair = (EndpointId, EndpointId);
 
 enum SegmentWrapper {
     Empty,
-    Line(LineSegment<f32>, EndpointPair),
-    Quadratic(QuadraticBezierSegment<f32>, EndpointPair),
-    Cubic(CubicBezierSegment<f32>, EndpointPair),
+    Line(LineSegment<f64>, EndpointPair),
+    Quadratic(QuadraticBezierSegment<f64>, EndpointPair),
+    Cubic(CubicBezierSegment<f64>, EndpointPair),
 }
 
 impl SegmentWrapper {
-    fn split(&self, range: Range<f32>) -> Self {
+    fn split(&self, range: Range<f64>) -> Self {
         match self {
             Self::Empty => Self::Empty,
             Self::Line(segment, pair) => Self::Line(segment.split_range(range), *pair),
@@ -39,11 +39,11 @@ impl SegmentWrapper {
 
 struct Edge {
     // distance from the beginning of the path
-    distance: f32,
+    distance: f64,
     // which segment this edge is on
     index: usize,
     // t-value of the endpoint on the segment
-    t: f32,
+    t: f64,
 }
 
 /// The result of sampling a path.
@@ -141,7 +141,7 @@ impl PathMeasurements {
     }
 
     /// Create path measurements initialized with a `Path`.
-    pub fn from_path(path: &Path, tolerance: f32) -> Self {
+    pub fn from_path(path: &Path, tolerance: f64) -> Self {
         let mut m = Self::empty();
         m.initialize(path.id_iter(), path, tolerance);
 
@@ -149,7 +149,7 @@ impl PathMeasurements {
     }
 
     /// Create path measurements initialized with a `PathSlice`.
-    pub fn from_path_slice(path: &PathSlice, tolerance: f32) -> Self {
+    pub fn from_path_slice(path: &PathSlice, tolerance: f64) -> Self {
         let mut m = Self::empty();
         m.initialize(path.id_iter(), path, tolerance);
 
@@ -157,7 +157,7 @@ impl PathMeasurements {
     }
 
     /// Create path measurements initialized with a generic iterator and position store.
-    pub fn from_iter<Iter, PS>(path: Iter, positions: &PS, tolerance: f32) -> Self
+    pub fn from_iter<Iter, PS>(path: Iter, positions: &PS, tolerance: f64) -> Self
     where
         Iter: IntoIterator<Item = IdEvent>,
         PS: PositionStore,
@@ -169,7 +169,7 @@ impl PathMeasurements {
     }
 
     /// Initialize the path measurements with a path.
-    pub fn initialize<Iter, PS>(&mut self, path: Iter, position_store: &PS, tolerance: f32)
+    pub fn initialize<Iter, PS>(&mut self, path: Iter, position_store: &PS, tolerance: f64)
     where
         Iter: IntoIterator<Item = IdEvent>,
         PS: PositionStore,
@@ -267,17 +267,17 @@ impl PathMeasurements {
     }
 
     /// Initialize the path measurements with a path.
-    pub fn initialize_with_path(&mut self, path: &Path, tolerance: f32) {
+    pub fn initialize_with_path(&mut self, path: &Path, tolerance: f64) {
         self.initialize_with_path_slice(path.as_slice(), tolerance)
     }
 
     /// Initialize the path measurements with a path.
-    pub fn initialize_with_path_slice(&mut self, path: PathSlice, tolerance: f32) {
+    pub fn initialize_with_path_slice(&mut self, path: PathSlice, tolerance: f64) {
         self.initialize(path.id_iter(), &path, tolerance)
     }
 
     /// Returns the approximate length of the path.
-    pub fn length(&self) -> f32 {
+    pub fn length(&self) -> f64 {
         if self.edges.is_empty() {
             0.0
         } else {
@@ -326,7 +326,7 @@ pub struct PathSampler<'l, PS, AS> {
     edges: &'l [Edge],
     positions: &'l PS,
     attributes: &'l AS,
-    attribute_buffer: Vec<f32>,
+    attribute_buffer: Vec<f64>,
     cursor: usize,
     sample_type: SampleType,
 }
@@ -355,7 +355,7 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
     /// Sample at a given distance along the path.
     ///
     /// If the path is empty, the produced sample will contain NaNs.
-    pub fn sample(&mut self, dist: f32) -> PathSample {
+    pub fn sample(&mut self, dist: f64) -> PathSample {
         self.sample_impl(dist, self.sample_type)
     }
 
@@ -364,7 +364,7 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
     /// The path measurements must have been initialized with the same path.
     /// The distance is clamped to the beginning and end of the path.
     /// Panics if the path is empty.
-    pub fn split_range(&mut self, mut range: Range<f32>, output: &mut dyn PathBuilder) {
+    pub fn split_range(&mut self, mut range: Range<f64>, output: &mut dyn PathBuilder) {
         let length = self.length();
         if self.sample_type == SampleType::Normalized {
             range.start *= length;
@@ -405,7 +405,7 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
     }
 
     /// Returns the approximate length of the path.
-    pub fn length(&self) -> f32 {
+    pub fn length(&self) -> f64 {
         if self.edges.is_empty() {
             0.0
         } else {
@@ -459,14 +459,14 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
         }
     }
 
-    fn in_bounds(&self, dist: f32) -> bool {
+    fn in_bounds(&self, dist: f64) -> bool {
         self.cursor != 0
             && self.edges[self.cursor - 1].distance <= dist
             && dist <= self.edges[self.cursor].distance
     }
 
     /// Move the pointer so the given point is on the current segment.
-    fn move_cursor(&mut self, dist: f32) {
+    fn move_cursor(&mut self, dist: f64) {
         if dist == 0.0 {
             self.cursor = 1;
             return;
@@ -513,7 +513,7 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
         if start < dist {
             let (len, num) = (self.length() - start, self.edges.len() - self.cursor - 1);
             debug_assert_ne!(num, 0);
-            if (dist - start) / len * (num as f32) < floor_log2(num) as f32 {
+            if (dist - start) / len * (num as f64) < floor_log2(num) as f64 {
                 loop {
                     self.cursor += 1;
                     if dist <= self.edges[self.cursor].distance {
@@ -528,7 +528,7 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
         } else {
             let (len, num) = (start, self.cursor + 1);
             debug_assert_ne!(num, 0);
-            if (start - dist) / len * (num as f32) < floor_log2(num) as f32 {
+            if (start - dist) / len * (num as f64) < floor_log2(num) as f64 {
                 loop {
                     self.cursor -= 1;
                     if self.cursor == 0 || self.edges[self.cursor - 1].distance < dist {
@@ -544,7 +544,7 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
     }
 
     /// Interpolate the custom attributes.
-    fn interpolate_attributes(&mut self, from: EndpointId, to: EndpointId, t: f32) {
+    fn interpolate_attributes(&mut self, from: EndpointId, to: EndpointId, t: f64) {
         let from = self.attributes.get(from);
         let to = self.attributes.get(to);
         for i in 0..self.attribute_buffer.len() {
@@ -553,7 +553,7 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
     }
 
     /// Returns the relative position (0 ~ 1) of the given point on the current segment.
-    fn t(&self, dist: f32) -> f32 {
+    fn t(&self, dist: f64) -> f64 {
         debug_assert!(self.in_bounds(dist));
         let prev = &self.edges[self.cursor - 1];
         let cur = &self.edges[self.cursor];
@@ -562,7 +562,7 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
         t_begin + (t_end - t_begin) * ((dist - prev.distance) / (cur.distance - prev.distance))
     }
 
-    fn sample_impl(&mut self, mut dist: f32, sample_type: SampleType) -> PathSample {
+    fn sample_impl(&mut self, mut dist: f64, sample_type: SampleType) -> PathSample {
         let length = self.length();
         if length == 0.0 {
             return self.sample_zero_length();
@@ -610,17 +610,17 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
         }
 
         for value in &mut self.attribute_buffer {
-            *value = f32::NAN;
+            *value = f64::NAN;
         }
 
         PathSample {
-            position: point(f32::NAN, f32::NAN),
-            tangent: vector(f32::NAN, f32::NAN),
+            position: point(f64::NAN, f64::NAN),
+            tangent: vector(f64::NAN, f64::NAN),
             attributes: &self.attribute_buffer,
         }
     }
 
-    fn add_segment(&mut self, ptr: usize, range: Option<Range<f32>>, dest: &mut dyn PathBuilder) {
+    fn add_segment(&mut self, ptr: usize, range: Option<Range<f64>>, dest: &mut dyn PathBuilder) {
         let segment = self.to_segment(self.events[ptr]);
         let segment = match range.clone() {
             Some(range) => segment.split(range),
@@ -663,7 +663,7 @@ impl<'l, PS: PositionStore, AS: AttributeStore> PathSampler<'l, PS, AS> {
 }
 
 #[cfg(test)]
-fn slice(a: &[f32]) -> &[f32] {
+fn slice(a: &[f64]) -> &[f64] {
     a
 }
 

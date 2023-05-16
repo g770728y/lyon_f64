@@ -86,7 +86,7 @@ use crate::path::Verb;
 use crate::polygon::Polygon;
 use crate::{Attributes, EndpointId, Winding, NO_ATTRIBUTES};
 
-use core::f32::consts::PI;
+use core::f64::consts::PI;
 use core::marker::Sized;
 
 use alloc::vec;
@@ -98,14 +98,14 @@ use num_traits::Float;
 /// The radius of each corner of a rounded rectangle.
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Default)]
 pub struct BorderRadii {
-    pub top_left: f32,
-    pub top_right: f32,
-    pub bottom_left: f32,
-    pub bottom_right: f32,
+    pub top_left: f64,
+    pub top_right: f64,
+    pub bottom_left: f64,
+    pub bottom_right: f64,
 }
 
 impl BorderRadii {
-    pub fn new(radius: f32) -> Self {
+    pub fn new(radius: f64) -> Self {
         let r = radius.abs();
         BorderRadii {
             top_left: r,
@@ -257,7 +257,7 @@ impl<B: PathBuilder> NoAttributes<B> {
     /// There must be no sub-path in progress when this method is called.
     /// No sub-path is in progress after the method is called.
     #[inline]
-    pub fn add_line_segment(&mut self, line: &LineSegment<f32>) -> (EndpointId, EndpointId) {
+    pub fn add_line_segment(&mut self, line: &LineSegment<f64>) -> (EndpointId, EndpointId) {
         self.inner.add_line_segment(line, NO_ATTRIBUTES)
     }
 
@@ -282,7 +282,7 @@ impl<B: PathBuilder> NoAttributes<B> {
     /// There must be no sub-path in progress when this method is called.
     /// No sub-path is in progress after the method is called.
     #[inline]
-    pub fn add_circle(&mut self, center: Point, radius: f32, winding: Winding)
+    pub fn add_circle(&mut self, center: Point, radius: f64, winding: Winding)
     where
         B: Sized,
     {
@@ -314,7 +314,7 @@ impl<B: PathBuilder> NoAttributes<B> {
 
     /// Returns a builder that approximates all curves with sequences of line segments.
     #[inline]
-    pub fn flattened(self, tolerance: f32) -> NoAttributes<Flattened<B>>
+    pub fn flattened(self, tolerance: f64) -> NoAttributes<Flattened<B>>
     where
         B: Sized,
     {
@@ -331,7 +331,7 @@ impl<B: PathBuilder> NoAttributes<B> {
     ) -> NoAttributes<Transformed<B, Transform>>
     where
         B: Sized,
-        Transform: Transformation<f32>,
+        Transform: Transformation<f64>,
     {
         NoAttributes {
             inner: Transformed::new(self.inner, transform),
@@ -589,7 +589,7 @@ pub trait PathBuilder {
     /// No sub-path is in progress after the method is called.
     fn add_line_segment(
         &mut self,
-        line: &LineSegment<f32>,
+        line: &LineSegment<f64>,
         attributes: Attributes,
     ) -> (EndpointId, EndpointId) {
         let a = self.begin(line.from, attributes);
@@ -635,7 +635,7 @@ pub trait PathBuilder {
     ///
     /// There must be no sub-path in progress when this method is called.
     /// No sub-path is in progress after the method is called.
-    fn add_circle(&mut self, center: Point, radius: f32, winding: Winding, attributes: Attributes)
+    fn add_circle(&mut self, center: Point, radius: f64, winding: Winding, attributes: Attributes)
     where
         Self: Sized,
     {
@@ -692,7 +692,7 @@ pub trait PathBuilder {
     }
 
     /// Returns a builder that approximates all curves with sequences of line segments.
-    fn flattened(self, tolerance: f32) -> Flattened<Self>
+    fn flattened(self, tolerance: f64) -> Flattened<Self>
     where
         Self: Sized,
     {
@@ -703,7 +703,7 @@ pub trait PathBuilder {
     fn transformed<Transform>(self, transform: Transform) -> Transformed<Self, Transform>
     where
         Self: Sized,
-        Transform: Transformation<f32>,
+        Transform: Transformation<f64>,
     {
         Transformed::new(self, transform)
     }
@@ -850,7 +850,7 @@ pub trait SvgPathBuilder {
     /// Corresponding SVG command: `H`.
     ///
     /// Equivalent to `line_to`, using the y coordinate of the current position.
-    fn horizontal_line_to(&mut self, x: f32);
+    fn horizontal_line_to(&mut self, x: f64);
 
     /// Adds an horizontal line segment in relative coordinates.
     ///
@@ -858,14 +858,14 @@ pub trait SvgPathBuilder {
     ///
     /// Equivalent to `line_to`, using the y coordinate of the current position.
     /// `dx` is the horizontal offset relative to the current position.
-    fn relative_horizontal_line_to(&mut self, dx: f32);
+    fn relative_horizontal_line_to(&mut self, dx: f64);
 
     /// Adds a vertical line segment.
     ///
     /// Corresponding SVG command: `V`.
     ///
     /// Equivalent to `line_to`, using the x coordinate of the current position.
-    fn vertical_line_to(&mut self, y: f32);
+    fn vertical_line_to(&mut self, y: f64);
 
     /// Adds a vertical line segment in relative coordinates.
     ///
@@ -873,7 +873,7 @@ pub trait SvgPathBuilder {
     ///
     /// Equivalent to `line_to`, using the y coordinate of the current position.
     /// `dy` is the horizontal offset relative to the current position.
-    fn relative_vertical_line_to(&mut self, dy: f32);
+    fn relative_vertical_line_to(&mut self, dy: f64);
 
     /// Adds an elliptical arc.
     ///
@@ -941,9 +941,9 @@ pub trait Build {
 pub struct Flattened<Builder> {
     builder: Builder,
     current_position: Point,
-    tolerance: f32,
-    prev_attributes: Vec<f32>,
-    attribute_buffer: Vec<f32>,
+    tolerance: f64,
+    prev_attributes: Vec<f64>,
+    attribute_buffer: Vec<f64>,
 }
 
 impl<Builder: Build> Build for Flattened<Builder> {
@@ -1027,7 +1027,7 @@ impl<Builder: PathBuilder> PathBuilder for Flattened<Builder> {
 }
 
 impl<Builder: PathBuilder> Flattened<Builder> {
-    pub fn new(builder: Builder, tolerance: f32) -> Flattened<Builder> {
+    pub fn new(builder: Builder, tolerance: f64) -> Flattened<Builder> {
         let n = builder.num_attributes();
         Flattened {
             builder,
@@ -1045,7 +1045,7 @@ impl<Builder: PathBuilder> Flattened<Builder> {
         self.builder.build()
     }
 
-    pub fn set_tolerance(&mut self, tolerance: f32) {
+    pub fn set_tolerance(&mut self, tolerance: f64) {
         self.tolerance = tolerance
     }
 }
@@ -1080,7 +1080,7 @@ impl<Builder: Build, Transform> Build for Transformed<Builder, Transform> {
 impl<Builder, Transform> PathBuilder for Transformed<Builder, Transform>
 where
     Builder: PathBuilder,
-    Transform: Transformation<f32>,
+    Transform: Transformation<f64>,
 {
     fn num_attributes(&self) -> usize {
         self.builder.num_attributes()
@@ -1149,7 +1149,7 @@ pub struct WithSvg<Builder: PathBuilder> {
     last_cmd: Verb,
     need_moveto: bool,
     is_empty: bool,
-    attribute_buffer: Vec<f32>,
+    attribute_buffer: Vec<f64>,
 }
 
 impl<Builder: PathBuilder> WithSvg<Builder> {
@@ -1175,7 +1175,7 @@ impl<Builder: PathBuilder> WithSvg<Builder> {
         self.builder.build()
     }
 
-    pub fn flattened(self, tolerance: f32) -> WithSvg<Flattened<Builder>> {
+    pub fn flattened(self, tolerance: f64) -> WithSvg<Flattened<Builder>> {
         WithSvg::new(Flattened::new(self.builder, tolerance))
     }
 
@@ -1184,7 +1184,7 @@ impl<Builder: PathBuilder> WithSvg<Builder> {
         transform: Transform,
     ) -> WithSvg<Transformed<Builder, Transform>>
     where
-        Transform: Transformation<f32>,
+        Transform: Transformation<f64>,
     {
         WithSvg::new(Transformed::new(self.builder, transform))
     }
@@ -1369,7 +1369,7 @@ impl<Builder: PathBuilder> WithSvg<Builder> {
 impl<Builder, Transform> WithSvg<Transformed<Builder, Transform>>
 where
     Builder: PathBuilder,
-    Transform: Transformation<f32>,
+    Transform: Transformation<f64>,
 {
     #[inline]
     pub fn set_transform(&mut self, transform: Transform) {
@@ -1453,22 +1453,22 @@ impl<Builder: PathBuilder> SvgPathBuilder for WithSvg<Builder> {
         self.quadratic_bezier_to(ctrl, to);
     }
 
-    fn horizontal_line_to(&mut self, x: f32) {
+    fn horizontal_line_to(&mut self, x: f64) {
         let y = self.current_position.y;
         self.line_to(point(x, y));
     }
 
-    fn relative_horizontal_line_to(&mut self, dx: f32) {
+    fn relative_horizontal_line_to(&mut self, dx: f64) {
         let p = self.current_position;
         self.line_to(point(p.x + dx, p.y));
     }
 
-    fn vertical_line_to(&mut self, y: f32) {
+    fn vertical_line_to(&mut self, y: f64) {
         let x = self.current_position.x;
         self.line_to(point(x, y));
     }
 
-    fn relative_vertical_line_to(&mut self, dy: f32) {
+    fn relative_vertical_line_to(&mut self, dy: f64) {
         let p = self.current_position;
         self.line_to(point(p.x, p.y + dy));
     }
@@ -1507,7 +1507,7 @@ impl<Builder: PathBuilder> SvgPathBuilder for WithSvg<Builder> {
 fn add_circle<Builder: PathBuilder>(
     builder: &mut Builder,
     center: Point,
-    radius: f32,
+    radius: f64,
     winding: Winding,
     attributes: Attributes,
 ) {
@@ -1518,7 +1518,7 @@ fn add_circle<Builder: PathBuilder>(
     };
 
     // https://spencermortensen.com/articles/bezier-circle/
-    const CONSTANT_FACTOR: f32 = 0.55191505;
+    const CONSTANT_FACTOR: f64 = 0.55191505;
     let d = radius * CONSTANT_FACTOR;
 
     builder.begin(center + vector(-radius, 0.0), attributes);
@@ -1589,7 +1589,7 @@ fn add_rounded_rectangle<Builder: PathBuilder>(
     }
 
     // https://spencermortensen.com/articles/bezier-circle/
-    const CONSTANT_FACTOR: f32 = 0.55191505;
+    const CONSTANT_FACTOR: f64 = 0.55191505;
 
     let tl_d = tl * CONSTANT_FACTOR;
     let tl_corner = point(x_min, y_min);

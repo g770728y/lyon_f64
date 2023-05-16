@@ -30,11 +30,11 @@ pub fn fit_box(src_rect: &Box2D, dst_rect: &Box2D, style: FitStyle) -> Transform
     let scale = match style {
         FitStyle::Stretch => scale,
         FitStyle::Min => {
-            let s = f32::min(scale.x, scale.y);
+            let s = f64::min(scale.x, scale.y);
             vector(s, s)
         }
         FitStyle::Max => {
-            let s = f32::max(scale.x, scale.y);
+            let s = f64::max(scale.x, scale.y);
             vector(s, s)
         }
         FitStyle::Horizontal => vector(scale.x, scale.x),
